@@ -2,7 +2,9 @@
   "name": "zk-circuits-circom-tests",
   "private": true,
   "scripts": {
-    "test:compile": "node scripts/compile-all.js"
+    "test": "npm run test:compile && npm run test:witness",
+    "test:compile": "node scripts/compile-all.js",
+    "test:witness": "node scripts/test-witnesses.js"
   },
   "devDependencies": {
     "circom2": "0.2.22",
