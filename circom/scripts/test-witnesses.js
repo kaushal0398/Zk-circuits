@@ -18,6 +18,9 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
     encoding: "utf8",
   });
+  if (result.error) {
+    throw new Error(`${name}: could not execute witness calculator: ${result.error.message}`);
+  }
   if (shouldPass && result.status !== 0) {
     throw new Error(`${name}: expected valid witness\n${result.stderr}`);
   }
