@@ -30,7 +30,7 @@ jobs:
       - name: Install Nargo
         run: |
           curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
-          "$HOME/.nargo/bin/noirup"
+          "$HOME/.nargo/bin/noirup" --version 0.36.0
           echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
       - name: Check and test Noir packages
         run: |
