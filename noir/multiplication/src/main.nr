@@ -1,5 +1,5 @@
 /// Proves knowledge of private factors a and b whose product is public.
-fn main(a: Field, b: Field, pub product: Field) {
+fn main(a: Field, b: Field, product: pub Field) {
     assert(a * b == product);
 }
 
