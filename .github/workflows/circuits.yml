@@ -41,8 +41,7 @@ jobs:
       - name: Install Nargo
         run: |
           curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
-          source "$HOME/.bashrc"
-          noirup
+          "$HOME/.nargo/bin/noirup"
           echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
       - name: Check multiplication circuit
         working-directory: noir/multiplication
