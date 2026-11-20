@@ -1,0 +1,16 @@
+# Noir build output
+noir/**/target/
+noir/**/prover.toml
+
+# Circom / snarkjs generated artifacts
+circom/**/build/
+circom/**/*.r1cs
+circom/**/*.wasm
+circom/**/*.sym
+circom/**/*.zkey
+circom/**/*.wtns
+circom/**/verification_key.json
+circom/**/public.json
+
+.DS_Store
+*.log
