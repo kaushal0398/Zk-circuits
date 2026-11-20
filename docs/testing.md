@@ -2,30 +2,40 @@
 
 ## Noir
 
-Install Nargo using the official Noir installation instructions, then run:
+Install Nargo using the pinned version in `.github/workflows/circuits.yml`, then run each package:
 
 ```bash
-cd noir/multiplication
-nargo check
-nargo test
+for package in noir/*; do
+  if [ -f "$package/Nargo.toml" ]; then
+    (cd "$package" && nargo check && nargo test)
+  fi
+done
 ```
 
-The test suite includes a valid multiplication witness and a deliberately invalid public product.
+The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 Poseidon Merkle membership. Their tests include successful statements and deliberately failing assertions.
 
 ## Circom
 
-Install Circom 2.1.6 or a compatible 2.x release. Compile the examples:
+Install Node.js 22, then run:
 
 ```bash
-mkdir -p /tmp/multiplier /tmp/range-check
-circom circom/multiplier/multiplier.circom --r1cs --wasm --sym -o /tmp/multiplier
-circom circom/range-check/range_check.circom --r1cs --wasm --sym -o /tmp/range-check
+cd circom
+npm install
+npm test
 ```
 
-Example witness inputs are provided beside each circuit. The range-check example represents 173 as an 8-bit little-endian decomposition.
+The test command first compiles every Circom circuit to `/tmp/zk-circuits-build`, then calculates witnesses with the generated WebAssembly calculators.
+
+Witness tests cover:
+- A valid multiplication witness.
+- The upper valid 8-bit boundary (255) and rejection of 256.
+- A Poseidon hash preimage and rejection of a mismatched public digest.
+- A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
+
+Poseidon inputs and expected outputs for the Circom witness cases are calculated with the pinned `circomlibjs` implementation. The tests check witness calculation only; they do not generate a proof or establish cross-language equivalence with Noir.
 
 ## Continuous integration
 
-The GitHub Actions workflow compiles both Circom examples and runs the Noir package tests on pushes and pull requests targeting `main`.
+The GitHub Actions workflow compiles and exercises Circom witnesses and runs `nargo check` plus `nargo test` for every Noir package on pushes and pull requests targeting `main`.
 
-A successful compile is not a security review. Before relying on a circuit, add adversarial witness tests and inspect the generated constraints and verifier integration.
+A successful compile or witness calculation is not a security review. Before relying on a circuit, review its constraints, field semantics, public/private input declarations, trusted setup, and verifier integration.
