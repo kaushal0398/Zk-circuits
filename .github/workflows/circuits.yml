@@ -20,7 +20,7 @@ jobs:
         run: npm install
       - name: Compile all Circom circuits
         working-directory: circom
-        run: npm run test:compile
+        run: npm test
 
   noir:
     name: Test Noir packages
