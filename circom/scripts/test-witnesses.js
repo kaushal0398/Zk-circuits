@@ -1,0 +1,78 @@
+const { execFileSync, spawnSync } = require("node:child_process");
+const { mkdtempSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
+const { tmpdir } = require("node:os");
+const { join, resolve } = require("node:path");
+const { buildPoseidon } = require("circomlibjs");
+
+const buildRoot = resolve("/tmp/zk-circuits-build");
+const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
+
+function runWitness(name, directory, circuitName, inputs, shouldPass) {
+  const generated = resolve(buildRoot, directory, `${circuitName}_js`);
+  const wasm = join(generated, `${circuitName}.wasm`);
+  const calculator = join(generated, "generate_witness.js");
+  const inputPath = join(tempRoot, `${name}.json`);
+  const witnessPath = join(tempRoot, `${name}.wtns`);
+  writeFileSync(inputPath, JSON.stringify(inputs));
+
+  const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
+    encoding: "utf8",
+  });
+  if (shouldPass && result.status !== 0) {
+    throw new Error(`${name}: expected valid witness\n${result.stderr}`);
+  }
+  if (!shouldPass && result.status === 0) {
+    throw new Error(`${name}: invalid witness unexpectedly succeeded`);
+  }
+  if (shouldPass) readFileSync(witnessPath);
+  console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
+}
+
+async function main() {
+  try {
+    runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true);
+    runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true);
+    runWitness("range-check-rejects-256", "range-check", "range_check", { value: "256" }, false);
+
+    const poseidon = await buildPoseidon();
+    const fieldToString = (value) => poseidon.F.toString(value);
+    const preimage = 42n;
+    const hash = poseidon([preimage]);
+    const digest = fieldToString(hash);
+    runWitness("hash-preimage-valid", "hash-preimage", "hash_preimage", {
+      preimage: preimage.toString(), digest,
+    }, true);
+    runWitness("hash-preimage-rejects-wrong-digest", "hash-preimage", "hash_preimage", {
+      preimage: preimage.toString(), digest: fieldToString(poseidon.F.add(hash, 1n)),
+    }, false);
+
+    const leaf = 11n;
+    const pathElements = [22n, 33n, 44n, 55n];
+    const pathIndices = [0, 1, 0, 1];
+    let current = leaf;
+    for (let i = 0; i < pathElements.length; i += 1) {
+      const pair = pathIndices[i] === 0
+        ? [current, pathElements[i]]
+        : [pathElements[i], current];
+      current = poseidon(pair);
+    }
+    const merkleInputs = {
+      leaf: leaf.toString(),
+      pathElements: pathElements.map(String),
+      pathIndices: pathIndices.map(String),
+      root: fieldToString(current),
+    };
+    runWitness("merkle-membership-valid", "merkle-membership", "merkle_membership", merkleInputs, true);
+    runWitness("merkle-membership-rejects-wrong-root", "merkle-membership", "merkle_membership", {
+      ...merkleInputs,
+      root: fieldToString(poseidon.F.add(current, 1n)),
+    }, false);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
