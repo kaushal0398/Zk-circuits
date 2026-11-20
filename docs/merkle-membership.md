@@ -18,4 +18,4 @@ Poseidon implementations must use matching parameters, field, and input ordering
 
 ## Testing
 
-The Noir package includes a positive membership test and a negative wrong-root test. The Circom example input is a structural placeholder: generate its root using the same circomlib Poseidon implementation before running witness generation. It is not a valid proof vector yet.
+The Noir package includes a positive membership test and a negative wrong-root test. The Circom witness test derives its root at runtime using the pinned circomlibjs Poseidon implementation. It checks a valid path, a mismatched public root, and a non-boolean direction index. This is a witness-calculation test, not a proof-generation test or a verified Noir/Circom interoperability vector.
