@@ -1,0 +1,11 @@
+{
+  "name": "zk-circuits-circom-tests",
+  "private": true,
+  "scripts": {
+    "test:compile": "node scripts/compile-all.js"
+  },
+  "devDependencies": {
+    "circom2": "^0.2.22",
+    "circomlib": "^2.0.5"
+  }
+}
