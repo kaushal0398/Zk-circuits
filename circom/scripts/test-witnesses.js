@@ -31,6 +31,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
 async function main() {
   try {
     runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true);
+    runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true);
     runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true);
     runWitness("range-check-rejects-256", "range-check", "range_check", { value: "256" }, false);
 
@@ -67,6 +68,10 @@ async function main() {
     runWitness("merkle-membership-rejects-wrong-root", "merkle-membership", "merkle_membership", {
       ...merkleInputs,
       root: incrementField(current),
+    }, false);
+    runWitness("merkle-membership-rejects-non-boolean-index", "merkle-membership", "merkle_membership", {
+      ...merkleInputs,
+      pathIndices: ["2", "1", "0", "1"],
     }, false);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
