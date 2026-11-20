@@ -7,9 +7,9 @@ A learning-oriented collection of zero-knowledge circuits implemented in **Noir*
 | Topic | Noir | Circom |
 |---|---|---|
 | Multiplication relation | `noir/multiplication` | `circom/multiplier` |
-| 8-bit range check | planned | `circom/range-check` |
+| 8-bit range check | `noir/range-check` | `circom/range-check` |
 | Poseidon Merkle membership | `noir/merkle-membership` | `circom/merkle-membership` |
-| Poseidon hash preimage | next | next |
+| Poseidon hash preimage | `noir/hash-preimage` | `circom/hash-preimage` |
 
 ## Toolchains
 
@@ -19,7 +19,7 @@ A learning-oriented collection of zero-knowledge circuits implemented in **Noir*
 
 ## Local checks
 
-See [docs/testing.md](docs/testing.md). CI compiles the Circom examples and runs Noir package checks on pushes and pull requests.
+See [docs/testing.md](docs/testing.md). CI compiles the Circom examples, calculates valid and invalid Circom witnesses, and runs Noir package checks on pushes and pull requests.
 
 ## Design principles
 
