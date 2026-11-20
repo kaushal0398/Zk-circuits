@@ -15,26 +15,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install Circom compiler and circomlib
-        run: |
-          npm install --global circom2
-          npm install --no-save circomlib
-          circom2 --version
-      - name: Compile multiplier
-        run: |
-          mkdir -p /tmp/multiplier
-          circom2 circom/multiplier/multiplier.circom --r1cs --wasm --sym -o /tmp/multiplier
-      - name: Compile range check
-        run: |
-          mkdir -p /tmp/range-check
-          circom2 circom/range-check/range_check.circom --r1cs --wasm --sym -o /tmp/range-check
-      - name: Compile Merkle membership
-        run: |
-          mkdir -p /tmp/merkle-membership
-          circom2 circom/merkle-membership/merkle_membership.circom --r1cs --wasm --sym -l node_modules -o /tmp/merkle-membership
+      - name: Install Circom dependencies
+        working-directory: circom
+        run: npm install
+      - name: Compile all Circom circuits
+        working-directory: circom
+        run: npm run test:compile
 
   noir:
-    name: Test Noir circuits
+    name: Test Noir packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,15 +32,10 @@ jobs:
           curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
           "$HOME/.nargo/bin/noirup"
           echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
-      - name: Check multiplication circuit
-        working-directory: noir/multiplication
-        run: nargo check
-      - name: Run multiplication tests
-        working-directory: noir/multiplication
-        run: nargo test
-      - name: Check Merkle membership circuit
-        working-directory: noir/merkle-membership
-        run: nargo check
-      - name: Run Merkle membership tests
-        working-directory: noir/merkle-membership
-        run: nargo test
+      - name: Check and test Noir packages
+        run: |
+          for package in noir/*; do
+            if [ -f "$package/Nargo.toml" ]; then
+              (cd "$package" && nargo check && nargo test)
+            fi
+          done
