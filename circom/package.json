@@ -5,7 +5,8 @@
     "test:compile": "node scripts/compile-all.js"
   },
   "devDependencies": {
-    "circom2": "^0.2.22",
-    "circomlib": "^2.0.5"
+    "circom2": "0.2.22",
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7"
   }
 }
