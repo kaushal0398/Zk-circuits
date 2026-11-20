@@ -1,4 +1,4 @@
-const { execFileSync, spawnSync } = require("node:child_process");
+const { spawnSync } = require("node:child_process");
 const { mkdtempSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
@@ -36,6 +36,7 @@ async function main() {
 
     const poseidon = await buildPoseidon();
     const fieldToString = (value) => poseidon.F.toString(value);
+    const incrementField = (value) => (BigInt(fieldToString(value)) + 1n).toString();
     const preimage = 42n;
     const hash = poseidon([preimage]);
     const digest = fieldToString(hash);
@@ -43,7 +44,7 @@ async function main() {
       preimage: preimage.toString(), digest,
     }, true);
     runWitness("hash-preimage-rejects-wrong-digest", "hash-preimage", "hash_preimage", {
-      preimage: preimage.toString(), digest: fieldToString(poseidon.F.add(hash, 1n)),
+      preimage: preimage.toString(), digest: incrementField(hash),
     }, false);
 
     const leaf = 11n;
@@ -65,7 +66,7 @@ async function main() {
     runWitness("merkle-membership-valid", "merkle-membership", "merkle_membership", merkleInputs, true);
     runWitness("merkle-membership-rejects-wrong-root", "merkle-membership", "merkle_membership", {
       ...merkleInputs,
-      root: fieldToString(poseidon.F.add(current, 1n)),
+      root: incrementField(current),
     }, false);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
