@@ -1,0 +1,46 @@
+name: Circuit checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  circom:
+    name: Compile Circom circuits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Circom compiler
+        run: |
+          npm install --global circom2
+          circom2 --version
+      - name: Compile multiplier
+        run: |
+          mkdir -p /tmp/multiplier
+          circom2 circom/multiplier/multiplier.circom --r1cs --wasm --sym -o /tmp/multiplier
+      - name: Compile range check
+        run: |
+          mkdir -p /tmp/range-check
+          circom2 circom/range-check/range_check.circom --r1cs --wasm --sym -o /tmp/range-check
+
+  noir:
+    name: Test Noir circuits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nargo
+        run: |
+          curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
+          echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
+          noirup
+      - name: Check multiplication circuit
+        working-directory: noir/multiplication
+        run: nargo check
+      - name: Run Noir tests
+        working-directory: noir/multiplication
+        run: nargo test
