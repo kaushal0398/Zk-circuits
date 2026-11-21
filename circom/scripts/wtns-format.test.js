@@ -28,6 +28,17 @@ test("parses a structurally valid WTNS v2 file", () => {
   });
 });
 
+test("accepts valid WTNS sections in either order", () => {
+  const header = Buffer.from([1, 0, 0, 0, 17, 2, 0, 0, 0]);
+  assert.deepEqual(parseWtns(createWtns({
+    sections: [section(2, Buffer.from([1, 2])), section(1, header)],
+  })), {
+    version: 2,
+    fieldBytes: 1,
+    witnessCount: 2,
+  });
+});
+
 test("rejects non-buffer input", () => {
   assert.throws(() => parseWtns("wtns"), /must be a Buffer/);
 });
