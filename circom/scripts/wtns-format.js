@@ -1,3 +1,11 @@
+function readBigIntLE(buffer) {
+  let value = 0n;
+  for (let index = buffer.length - 1; index >= 0; index -= 1) {
+    value = (value << 8n) | BigInt(buffer[index]);
+  }
+  return value;
+}
+
 function parseWtns(buffer) {
   if (!Buffer.isBuffer(buffer)) {
     throw new TypeError("WTNS input must be a Buffer");
@@ -60,17 +68,31 @@ function parseWtns(buffer) {
     throw new Error("WTNS header section has an invalid field width");
   }
 
+  const primeField = readBigIntLE(header.subarray(4, 4 + fieldBytes));
+  if (primeField <= 1n) {
+    throw new Error("WTNS header contains an invalid prime field modulus");
+  }
+
   const witnessCount = header.readUInt32LE(4 + fieldBytes);
   if (witnessCount === 0) {
     throw new Error("WTNS header declares no witnesses");
   }
 
+  const witnessSection = sections.get(2);
   const expectedWitnessBytes = BigInt(fieldBytes) * BigInt(witnessCount);
-  if (BigInt(sections.get(2).length) !== expectedWitnessBytes) {
+  if (BigInt(witnessSection.length) !== expectedWitnessBytes) {
     throw new Error("WTNS witness section length does not match its header");
   }
 
-  return { version, fieldBytes, witnessCount };
+  for (let index = 0; index < witnessCount; index += 1) {
+    const start = index * fieldBytes;
+    const value = readBigIntLE(witnessSection.subarray(start, start + fieldBytes));
+    if (value >= primeField) {
+      throw new Error(`WTNS witness ${index} is not a canonical field element`);
+    }
+  }
+
+  return { version, fieldBytes, witnessCount, primeField: primeField.toString() };
 }
 
 module.exports = { parseWtns };
