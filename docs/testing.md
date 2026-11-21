@@ -24,7 +24,7 @@ npm install
 npm test
 ```
 
-The test command first compiles every Circom circuit to `/tmp/zk-circuits-build`, then calculates witnesses with the generated WebAssembly calculators.
+The test command compiles every Circom circuit into a `zk-circuits-build` directory under Node.js's platform-specific temporary directory (`os.tmpdir()`), then calculates witnesses with the generated WebAssembly calculators. The same resolved directory is used by both scripts, so the workflow does not depend on a POSIX-only `/tmp` path.
 
 Witness tests cover:
 - A valid multiplication witness.

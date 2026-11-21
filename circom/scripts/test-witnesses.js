@@ -4,7 +4,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 
-const buildRoot = resolve("/tmp/zk-circuits-build");
+const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass) {
