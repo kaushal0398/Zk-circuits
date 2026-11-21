@@ -1,5 +1,5 @@
 const { execFileSync } = require("node:child_process");
-const { mkdirSync, rmSync, statSync } = require("node:fs");
+const { lstatSync, mkdirSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { resolve } = require("node:path");
 
@@ -31,13 +31,16 @@ for (const [directory, file, circuitName] of circuits) {
   ];
 
   for (const artifact of artifacts) {
-    let size;
+    let metadata;
     try {
-      size = statSync(artifact).size;
+      metadata = lstatSync(artifact);
     } catch (error) {
       throw new Error(`Missing compiled artifact for ${directory}: ${artifact}`, { cause: error });
     }
-    if (size === 0) {
+    if (!metadata.isFile()) {
+      throw new Error(`Compiled artifact is not a regular file for ${directory}: ${artifact}`);
+    }
+    if (metadata.size === 0) {
       throw new Error(`Compiled artifact is empty for ${directory}: ${artifact}`);
     }
   }
