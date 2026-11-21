@@ -1,5 +1,5 @@
 const { execFileSync } = require("node:child_process");
-const { mkdirSync, rmSync, statSync } = require("node:fs");
+const { lstatSync, mkdirSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { resolve } = require("node:path");
 
@@ -33,7 +33,7 @@ for (const [directory, file, circuitName] of circuits) {
   for (const artifact of artifacts) {
     let metadata;
     try {
-      metadata = statSync(artifact);
+      metadata = lstatSync(artifact);
     } catch (error) {
       throw new Error(`Missing compiled artifact for ${directory}: ${artifact}`, { cause: error });
     }
