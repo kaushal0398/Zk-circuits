@@ -4,16 +4,17 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
+const { parseWtns } = require("./wtns-format");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass) {
-  const generated = resolve(buildRoot, directory, `${circuitName}_js`);
-  const wasm = join(generated, `${circuitName}.wasm`);
+  const generated = resolve(buildRoot, directory, circuitName + "_js");
+  const wasm = join(generated, circuitName + ".wasm");
   const calculator = join(generated, "generate_witness.js");
-  const inputPath = join(tempRoot, `${name}.json`);
-  const witnessPath = join(tempRoot, `${name}.wtns`);
+  const inputPath = join(tempRoot, name + ".json");
+  const witnessPath = join(tempRoot, name + ".wtns");
   writeFileSync(inputPath, JSON.stringify(inputs));
 
   const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
@@ -22,12 +23,10 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   assertWitnessResult(name, result, shouldPass);
 
   if (shouldPass) {
-    const witness = readFileSync(witnessPath);
-    if (witness.length < 12 || witness.toString("ascii", 0, 4) !== "wtns") {
-      throw new Error(`${name}: generated witness has an invalid WTNS header`);
-    }
+    const metadata = parseWtns(readFileSync(witnessPath));
+    console.log("Verified WTNS v" + metadata.version + " with " + metadata.witnessCount + " witnesses");
   }
-  console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
+  console.log("PASS " + name + (shouldPass ? "" : " (rejected as expected)"));
 }
 
 async function main() {
