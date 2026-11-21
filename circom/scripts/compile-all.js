@@ -1,5 +1,5 @@
 const { execFileSync } = require("node:child_process");
-const { mkdirSync, statSync } = require("node:fs");
+const { mkdirSync, rmSync, statSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { resolve } = require("node:path");
 
@@ -15,6 +15,8 @@ const circuits = [
 for (const [directory, file, circuitName] of circuits) {
   const source = resolve(root, directory, file);
   const output = resolve(buildRoot, directory);
+  // Remove artifacts from previous runs so a partial or skipped output cannot pass validation.
+  rmSync(output, { recursive: true, force: true });
   mkdirSync(output, { recursive: true });
   execFileSync("npx", [
     "circom2", source, "--r1cs", "--wasm", "--sym",
