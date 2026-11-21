@@ -23,8 +23,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   assertWitnessResult(name, result, shouldPass);
 
   if (shouldPass) {
-    const metadata = parseWtns(readFileSync(witnessPath));
-    console.log("Verified WTNS v" + metadata.version + " with " + metadata.witnessCount + " witnesses");
+    parseWtns(readFileSync(witnessPath));
   }
   console.log("PASS " + name + (shouldPass ? "" : " (rejected as expected)"));
 }
