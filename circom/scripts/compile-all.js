@@ -31,13 +31,16 @@ for (const [directory, file, circuitName] of circuits) {
   ];
 
   for (const artifact of artifacts) {
-    let size;
+    let metadata;
     try {
-      size = statSync(artifact).size;
+      metadata = statSync(artifact);
     } catch (error) {
       throw new Error(`Missing compiled artifact for ${directory}: ${artifact}`, { cause: error });
     }
-    if (size === 0) {
+    if (!metadata.isFile()) {
+      throw new Error(`Compiled artifact is not a regular file for ${directory}: ${artifact}`);
+    }
+    if (metadata.size === 0) {
       throw new Error(`Compiled artifact is empty for ${directory}: ${artifact}`);
     }
   }
