@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "npm run test:unit && npm run test:compile && npm run test:witness",
-    "test:unit": "node --test scripts/witness-result.test.js",
+    "test:unit": "node --test scripts/witness-result.test.js scripts/wtns-format.test.js",
     "test:compile": "node scripts/compile-all.js",
     "test:witness": "node scripts/test-witnesses.js"
   },

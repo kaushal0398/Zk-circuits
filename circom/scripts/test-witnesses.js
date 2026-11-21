@@ -4,6 +4,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
+const { parseWtns } = require("./wtns-format");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
@@ -22,10 +23,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   assertWitnessResult(name, result, shouldPass);
 
   if (shouldPass) {
-    const witness = readFileSync(witnessPath);
-    if (witness.length < 12 || witness.toString("ascii", 0, 4) !== "wtns") {
-      throw new Error(`${name}: generated witness has an invalid WTNS header`);
-    }
+    parseWtns(readFileSync(witnessPath));
   }
   console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
 }

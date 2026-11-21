@@ -26,6 +26,8 @@ npm test
 
 The test command compiles every Circom circuit into a `zk-circuits-build` directory under Node.js's platform-specific temporary directory (`os.tmpdir()`), then calculates witnesses with the generated WebAssembly calculators. The same resolved directory is used by both scripts, so the workflow does not depend on a POSIX-only `/tmp` path.
 
+Successful witness outputs are parsed as WTNS v2 files. The harness validates the file header, section boundaries, field width, witness count, and exact witness payload length.
+
 Witness tests cover:
 - A valid multiplication witness.
 - The upper valid 8-bit boundary (255) and rejection of 256.
