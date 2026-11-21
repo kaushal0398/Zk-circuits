@@ -14,8 +14,8 @@ jobs:
     name: Compile Circom circuits
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - name: Install Circom dependencies
@@ -32,9 +32,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Nargo
         run: |
-          curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
-          "$HOME/.nargo/bin/noirup" --version 0.36.0
+          mkdir -p "$HOME/.nargo/bin"
+          curl --fail --location --silent --show-error \
+            "https://github.com/noir-lang/noirup/releases/download/v0.1.5/noirup" \
+            --output "$RUNNER_TEMP/noirup"
+          echo "b37012eb25a0c44fa84a1b524c3c6d3acbb86d56c8a0bdc3982fddb7772d4772  $RUNNER_TEMP/noirup" | sha256sum --check --status
+          install -m 0755 "$RUNNER_TEMP/noirup" "$HOME/.nargo/bin/noirup"
           echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.nargo/bin/noirup" --version 0.36.0
       - name: Check and test Noir packages
         run: |
           for package in noir/*; do
