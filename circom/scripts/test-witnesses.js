@@ -3,6 +3,7 @@ const { mkdtempSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
+const { assertWitnessResult } = require("./witness-result");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
@@ -18,20 +19,8 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
     encoding: "utf8",
   });
-  if (result.error) {
-    throw new Error(`${name}: could not execute witness calculator: ${result.error.message}`);
-  }
-  const output = `${result.stdout}\n${result.stderr}`;
+  assertWitnessResult(name, result, shouldPass);
 
-  if (shouldPass && result.status !== 0) {
-    throw new Error(`${name}: expected valid witness\n${output}`);
-  }
-  if (!shouldPass && result.status === 0) {
-    throw new Error(`${name}: invalid witness unexpectedly succeeded`);
-  }
-  if (!shouldPass && !/assert failed/i.test(output)) {
-    throw new Error(`${name}: expected a constraint assertion failure, received:\n${output}`);
-  }
   if (shouldPass) {
     const witness = readFileSync(witnessPath);
     if (witness.length < 12 || witness.toString("ascii", 0, 4) !== "wtns") {
