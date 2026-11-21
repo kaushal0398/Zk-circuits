@@ -21,13 +21,23 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   if (result.error) {
     throw new Error(`${name}: could not execute witness calculator: ${result.error.message}`);
   }
+  const output = `${result.stdout}\n${result.stderr}`;
+
   if (shouldPass && result.status !== 0) {
-    throw new Error(`${name}: expected valid witness\n${result.stderr}`);
+    throw new Error(`${name}: expected valid witness\n${output}`);
   }
   if (!shouldPass && result.status === 0) {
     throw new Error(`${name}: invalid witness unexpectedly succeeded`);
   }
-  if (shouldPass) readFileSync(witnessPath);
+  if (!shouldPass && !/assert failed/i.test(output)) {
+    throw new Error(`${name}: expected a constraint assertion failure, received:\n${output}`);
+  }
+  if (shouldPass) {
+    const witness = readFileSync(witnessPath);
+    if (witness.length < 12 || witness.toString("ascii", 0, 4) !== "wtns") {
+      throw new Error(`${name}: generated witness has an invalid WTNS header`);
+    }
+  }
   console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
 }
 
