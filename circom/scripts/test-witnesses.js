@@ -10,11 +10,11 @@ const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass) {
-  const generated = resolve(buildRoot, directory, circuitName + "_js");
-  const wasm = join(generated, circuitName + ".wasm");
+  const generated = resolve(buildRoot, directory, `${circuitName}_js`);
+  const wasm = join(generated, `${circuitName}.wasm`);
   const calculator = join(generated, "generate_witness.js");
-  const inputPath = join(tempRoot, name + ".json");
-  const witnessPath = join(tempRoot, name + ".wtns");
+  const inputPath = join(tempRoot, `${name}.json`);
+  const witnessPath = join(tempRoot, `${name}.wtns`);
   writeFileSync(inputPath, JSON.stringify(inputs));
 
   const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
@@ -25,7 +25,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   if (shouldPass) {
     parseWtns(readFileSync(witnessPath));
   }
-  console.log("PASS " + name + (shouldPass ? "" : " (rejected as expected)"));
+  console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
 }
 
 async function main() {
