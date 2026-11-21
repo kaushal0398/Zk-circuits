@@ -1,0 +1,76 @@
+function parseWtns(buffer) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new TypeError("WTNS input must be a Buffer");
+  }
+  if (buffer.length < 12) {
+    throw new Error("WTNS file is truncated before the header");
+  }
+  if (buffer.toString("ascii", 0, 4) !== "wtns") {
+    throw new Error("WTNS file has an invalid magic header");
+  }
+
+  const version = buffer.readUInt32LE(4);
+  if (version !== 2) {
+    throw new Error("Unsupported WTNS version: " + version);
+  }
+
+  const sectionCount = buffer.readUInt32LE(8);
+  if (sectionCount !== 2) {
+    throw new Error("Expected 2 WTNS sections, found " + sectionCount);
+  }
+
+  const sections = new Map();
+  let offset = 12;
+
+  for (let index = 0; index < sectionCount; index += 1) {
+    if (buffer.length - offset < 12) {
+      throw new Error("WTNS section " + (index + 1) + " has a truncated header");
+    }
+
+    const sectionId = buffer.readUInt32LE(offset);
+    const sectionSize = buffer.readBigUInt64LE(offset + 4);
+    offset += 12;
+
+    if (sections.has(sectionId)) {
+      throw new Error("WTNS contains duplicate section " + sectionId);
+    }
+    if (sectionSize > BigInt(buffer.length - offset)) {
+      throw new Error("WTNS section " + sectionId + " extends beyond the file");
+    }
+
+    const size = Number(sectionSize);
+    sections.set(sectionId, buffer.subarray(offset, offset + size));
+    offset += size;
+  }
+
+  if (offset !== buffer.length) {
+    throw new Error("WTNS file contains trailing data");
+  }
+  if (!sections.has(1) || !sections.has(2)) {
+    throw new Error("WTNS file must contain header and witness sections");
+  }
+
+  const header = sections.get(1);
+  if (header.length < 8) {
+    throw new Error("WTNS header section is truncated");
+  }
+
+  const fieldBytes = header.readUInt32LE(0);
+  if (fieldBytes === 0 || header.length !== 4 + fieldBytes + 4) {
+    throw new Error("WTNS header section has an invalid field width");
+  }
+
+  const witnessCount = header.readUInt32LE(4 + fieldBytes);
+  if (witnessCount === 0) {
+    throw new Error("WTNS header declares no witnesses");
+  }
+
+  const expectedWitnessBytes = BigInt(fieldBytes) * BigInt(witnessCount);
+  if (BigInt(sections.get(2).length) !== expectedWitnessBytes) {
+    throw new Error("WTNS witness section length does not match its header");
+  }
+
+  return { version, fieldBytes, witnessCount };
+}
+
+module.exports = { parseWtns };
