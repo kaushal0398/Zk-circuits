@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const test = require("node:test");
 const { assertWitnessResult } = require("./witness-result");
 
@@ -29,17 +30,26 @@ test("rejects invalid witnesses that fail for an unrelated reason", () => {
 test("rejects a signal-terminated calculator even if it printed an assertion", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: null, signal: "SIGTERM", stdout: "Assert Failed", stderr: "", error: undefined,
-  }, false), /did not exit normally \(signal SIGTERM\)/);
+  }, false), /did not exit normally \\(signal SIGTERM\\)/);
 });
 
 test("rejects a calculator with no exit status", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: null, signal: null, stdout: "Assert Failed", stderr: "", error: undefined,
-  }, false), /did not exit normally \(no exit status\)/);
+  }, false), /did not exit normally \\(no exit status\\)/);
 });
 
 test("reports process startup errors", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: null, signal: null, stdout: "", stderr: "", error: new Error("spawn failed"),
   }, false), /could not execute witness calculator: spawn failed/);
+});
+
+test("rejects a calculator that exceeds its execution timeout", () => {
+  const result = spawnSync(process.execPath, ["-e", "setTimeout(() => {}, 5000)"], {
+    encoding: "utf8",
+    timeout: 100,
+  });
+  assert.equal(result.error?.code, "ETIMEDOUT");
+  assert.throws(() => assertWitnessResult("timed-out", result, false), /could not execute witness calculator/);
 });
