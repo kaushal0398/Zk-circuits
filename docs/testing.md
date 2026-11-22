@@ -34,7 +34,7 @@ Witness tests cover:
 - A Poseidon hash preimage and rejection of a mismatched public digest.
 - A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
 
-Poseidon inputs and expected outputs for the Circom witness cases are calculated with the pinned `circomlibjs` implementation. The tests check witness calculation only; they do not generate a proof or establish cross-language equivalence with Noir.
+Poseidon `hash_2([1, 2])` and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. This covers the selected hash input and Merkle path only; it does not establish equivalence for all inputs or generate a proof.
 
 ## Continuous integration
 
