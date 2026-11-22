@@ -196,3 +196,24 @@ test("accepts the next 64-bit word width for a 65-bit modulus", () => {
   });
   assert.equal(parseWtns(data).fieldBytes, 16);
 });
+
+test("rejects a composite prime-field modulus", () => {
+  assert.throws(() => parseWtns(createWtns({
+    header: createHeader({ primeField: 15n }),
+  })), /modulus that is not prime/);
+});
+
+test("rejects a Carmichael number as the prime-field modulus", () => {
+  assert.throws(() => parseWtns(createWtns({
+    header: createHeader({ primeField: 561n }),
+  })), /modulus that is not prime/);
+});
+
+test("accepts the BN254 scalar field modulus", () => {
+  const primeField = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+  const data = createWtns({
+    header: createHeader({ fieldBytes: 32, primeField }),
+    witness: encodeWitnesses([primeField - 1n, 0n], 32),
+  });
+  assert.equal(parseWtns(data).primeField, primeField.toString());
+});

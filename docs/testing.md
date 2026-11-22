@@ -26,7 +26,7 @@ npm test
 
 The test command compiles every Circom circuit into a `zk-circuits-build` directory under Node.js's platform-specific temporary directory (`os.tmpdir()`), then calculates witnesses with the generated WebAssembly calculators. The same resolved directory is used by both scripts, so the workflow does not depend on a POSIX-only `/tmp` path.
 
-Successful witness outputs are parsed as WTNS v2 files. The harness validates the file header, section boundaries, field width, witness count, and exact witness payload length. The field width must match the 64-bit word-rounded modulus size used by snarkjs: `ceil(bitLength(modulus) / 64) * 8` bytes. It also reads the prime-field modulus from the WTNS header and rejects witness values greater than or equal to that modulus, ensuring each encoded value is a canonical field element. See the [snarkjs WTNS writer](https://github.com/iden3/snarkjs/blob/master/src/wtns_utils.js) for the width encoding.
+Successful witness outputs are parsed as WTNS v2 files. The harness validates the file header, section boundaries, field width, witness count, and exact witness payload length. The field width must match the 64-bit word-rounded modulus size used by snarkjs: `ceil(bitLength(modulus) / 64) * 8` bytes. It also reads the prime-field modulus from the WTNS header and rejects witness values greater than or equal to that modulus, ensuring each encoded value is a canonical field element. The parser also checks that the declared modulus is prime using Node.js's built-in primality test. See the [snarkjs WTNS writer](https://github.com/iden3/snarkjs/blob/master/src/wtns_utils.js) for the width encoding.
 
 Witness tests cover:
 - A valid multiplication witness.
