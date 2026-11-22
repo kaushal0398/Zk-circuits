@@ -12,6 +12,10 @@ const poseidonVector = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/poseidon-bn254.json"),
   "utf8",
 ));
+const merkleVector = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/merkle-membership-bn254.json"),
+  "utf8",
+));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass) {
   const generated = resolve(buildRoot, directory, `${circuitName}_js`);
@@ -63,9 +67,9 @@ async function main() {
       preimage: preimage.toString(), digest: incrementField(hash),
     }, false);
 
-    const leaf = 11n;
-    const pathElements = [22n, 33n, 44n, 55n];
-    const pathIndices = [0, 1, 0, 1];
+    const leaf = BigInt(merkleVector.leaf);
+    const pathElements = merkleVector.pathElements.map(BigInt);
+    const pathIndices = merkleVector.pathIndices.map(Number);
     let current = leaf;
     for (let i = 0; i < pathElements.length; i += 1) {
       const pair = pathIndices[i] === 0
@@ -73,12 +77,19 @@ async function main() {
         : [pathElements[i], current];
       current = poseidon(pair);
     }
-    console.log(`MERKLE_VECTOR_ROOT=${fieldToString(current)}`);
+    const calculatedRoot = fieldToString(current);
+    if (calculatedRoot !== merkleVector.root) {
+      throw new Error(
+        `Merkle membership BN254 shared vector mismatch: expected ${merkleVector.root}, received ${calculatedRoot}`,
+      );
+    }
+    console.log("PASS merkle-membership-bn254-shared-vector");
+
     const merkleInputs = {
       leaf: leaf.toString(),
       pathElements: pathElements.map(String),
       pathIndices: pathIndices.map(String),
-      root: fieldToString(current),
+      root: merkleVector.root,
     };
     runWitness("merkle-membership-valid", "merkle-membership", "merkle_membership", merkleInputs, true);
     runWitness("merkle-membership-rejects-wrong-root", "merkle-membership", "merkle_membership", {
