@@ -68,7 +68,8 @@ function parseCircomPublicValues(source) {
     assert.ok(declaredInputs.includes(name), `Circom public input ${name} must be declared`);
   }
 
-  return [...publicInputs, ...outputs]
+  // Circom places main-component outputs before explicitly public inputs in witness order.
+  return [...outputs, ...publicInputs]
     .map((name) => circomToNoirNames[name] ?? name);
 }
 
@@ -81,22 +82,23 @@ for (const circuit of circuits) {
     const expected = [...circuit.expectedPublic];
 
     assert.deepEqual(noirPublic, expected, "Noir public parameters must match the circuit contract in declaration order");
-    assert.deepEqual(circomPublic, expected, "Circom public values must match the circuit contract in declaration order");
+    assert.deepEqual(circomPublic, expected, "Circom public values must match the circuit contract in witness order");
     assert.deepEqual(noirPublic, circomPublic, "Noir and Circom public interfaces must agree in order");
   });
 }
 
 test("preserves declaration order for multi-value public interfaces", () => {
   const noirPublic = parseNoirPublicParameters(
-    "fn main(second: pub Field, first: pub Field, witness: Field) {}",
+    "fn main(digest: pub Field, second: pub Field, first: pub Field, witness: Field) {}",
   );
   const circomPublic = parseCircomPublicValues(`
     signal input first;
     signal input second;
     signal input witness;
+    signal output digest;
     component main { public [second, first] } = Example();
   `);
 
-  assert.deepEqual(noirPublic, ["second", "first"]);
+  assert.deepEqual(noirPublic, ["digest", "second", "first"]);
   assert.deepEqual(circomPublic, noirPublic);
 });
