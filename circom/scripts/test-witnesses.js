@@ -4,6 +4,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
+const { parseMerkleVector } = require("./merkle-vector");
 const { parseWtns } = require("./wtns-format");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
@@ -12,7 +13,7 @@ const poseidonVector = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/poseidon-bn254.json"),
   "utf8",
 ));
-const merkleVector = JSON.parse(readFileSync(
+const merkleVectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/merkle-membership-bn254.json"),
   "utf8",
 ));
@@ -39,6 +40,8 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
 
 async function main() {
   try {
+    const merkleVector = parseMerkleVector(merkleVectorData);
+
     runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true);
     runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true);
     runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true);
@@ -67,9 +70,9 @@ async function main() {
       preimage: preimage.toString(), digest: incrementField(hash),
     }, false);
 
-    const leaf = BigInt(merkleVector.leaf);
-    const pathElements = merkleVector.pathElements.map(BigInt);
-    const pathIndices = merkleVector.pathIndices.map(Number);
+    const leaf = merkleVector.leaf;
+    const pathElements = merkleVector.pathElements;
+    const pathIndices = merkleVector.pathIndices;
     let current = leaf;
     for (let i = 0; i < pathElements.length; i += 1) {
       const pair = pathIndices[i] === 0
