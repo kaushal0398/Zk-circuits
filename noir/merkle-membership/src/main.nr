@@ -52,3 +52,9 @@ fn rejects_wrong_root() {
 
     assert(compute_root(leaf, path_elements, path_indices) == wrong_root);
 }
+
+#[test]
+fn matches_shared_poseidon_bn254_hash_2_vector() {
+    // Keep this known-answer value aligned with test-vectors/poseidon-bn254.json.
+    assert(hash_2([1, 2]) == 7853200120776062878684798364095072458815029376092732009249414926327459813530);
+}
