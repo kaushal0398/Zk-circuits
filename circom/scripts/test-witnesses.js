@@ -73,6 +73,10 @@ async function main() {
       ...merkleInputs,
       pathIndices: ["2", "1", "0", "1"],
     }, false);
+    runWitness("merkle-membership-rejects-negative-index", "merkle-membership", "merkle_membership", {
+      ...merkleInputs,
+      pathIndices: ["-1", "1", "0", "1"],
+    }, false);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
