@@ -73,6 +73,12 @@ function parseWtns(buffer) {
     throw new Error("WTNS header contains an invalid prime field modulus");
   }
 
+  // snarkjs stores field elements in 64-bit words, rounding the modulus width up.
+  const expectedFieldBytes = Math.ceil(primeField.toString(2).length / 64) * 8;
+  if (fieldBytes !== expectedFieldBytes) {
+    throw new Error("WTNS field width must be " + expectedFieldBytes + " bytes for its modulus");
+  }
+
   const witnessCount = header.readUInt32LE(4 + fieldBytes);
   if (witnessCount === 0) {
     throw new Error("WTNS header declares no witnesses");
