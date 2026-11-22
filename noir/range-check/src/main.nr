@@ -28,8 +28,8 @@ fn reconstruct(bits: [bool; 8]) -> Field {
     reconstructed
 }
 
-/// Proves that a private field element is an unsigned 8-bit integer.
-fn main(value: Field, bits: [bool; 8]) {
+/// Proves that a public field element is an unsigned 8-bit integer.
+fn main(value: pub Field, bits: [bool; 8]) {
     assert(value == reconstruct(bits));
 }
 
