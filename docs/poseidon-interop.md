@@ -13,7 +13,7 @@ Before sharing roots or digests between implementations, verify:
 
 ## Shared BN254 hash_2 vector
 
-The repository now checks one known-answer vector for the BN254 Poseidon hash with two inputs:
+The repository checks one known-answer vector for the BN254 Poseidon hash with two inputs:
 
 - Inputs: `[1, 2]`
 - Expected output (decimal): `7853200120776062878684798364095072458815029376092732009249414926327459813530`
@@ -22,6 +22,15 @@ The vector is stored in [test-vectors/poseidon-bn254.json](../test-vectors/posei
 
 The expected value is also present in the upstream `circomlibjs` v0.1.7 Poseidon test and the Noir Poseidon v0.1.1 reference permutation test. The Circom Merkle witness tests additionally exercise the compiled circuit against roots calculated by `circomlibjs`.
 
-This is one shared known-answer vector, not proof of complete cross-language compatibility. Add vectors for other arities, input boundaries, and complete Merkle paths before relying on broader interoperability.
+## Shared depth-4 Merkle membership vector
 
-The current Merkle JSON example remains illustrative, not a validated shared vector.
+The checked-in [test-vectors/merkle-membership-bn254.json](../test-vectors/merkle-membership-bn254.json) vector fixes the leaf, four siblings, direction bits, and expected root:
+
+- Leaf: `11`
+- Siblings: `[22, 33, 44, 55]`
+- Direction bits: `[0, 1, 0, 1]`
+- Expected root (decimal): `15279200565368274915541710634944179633805310769512106586104924638980105011859`
+
+The Circom harness validates the vector's depth, direction-bit domain, decimal encoding, and BN254 field bounds before independently recomputing its root with `circomlibjs`. Noir checks the same fixed inputs and expected root through `compute_root`.
+
+These are selected known-answer checks, not proof of complete cross-language compatibility. Add vectors for other hash arities, input boundaries, and Merkle paths before relying on broader interoperability.

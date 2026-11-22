@@ -28,11 +28,14 @@ The test command compiles every Circom circuit into a `zk-circuits-build` direct
 
 Successful witness outputs are parsed as WTNS v2 files. The harness validates the file header, section boundaries, field width, witness count, and exact witness payload length. The field width must match the 64-bit word-rounded modulus size used by snarkjs: `ceil(bitLength(modulus) / 64) * 8` bytes. It also reads the prime-field modulus from the WTNS header and rejects witness values greater than or equal to that modulus, ensuring each encoded value is a canonical field element. The parser also checks that the declared modulus is prime using Node.js's built-in primality test. See the [snarkjs WTNS writer](https://github.com/iden3/snarkjs/blob/master/src/wtns_utils.js) for the width encoding.
 
+The Circom unit suite also validates the checked-in depth-4 Merkle vector before it is used for witness generation. It requires exactly four siblings and direction bits, accepts only numeric direction bits `0` and `1`, and requires leaf, sibling, and root values to be canonical unsigned decimal strings inside the BN254 scalar field. This prevents malformed vector data from being silently interpreted by the reference-root calculation.
+
 Witness tests cover:
 - A valid multiplication witness.
 - The upper valid 8-bit boundary (255) and rejection of 256.
 - A Poseidon hash preimage and rejection of a mismatched public digest.
 - A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
+- Rejection of non-boolean and negative Merkle direction indices.
 
 Poseidon `hash_2([1, 2])` and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. This covers the selected hash input and Merkle path only; it does not establish equivalence for all inputs or generate a proof.
 
