@@ -1,0 +1,7 @@
+{
+  "name": "BN254 depth-4 Poseidon Merkle membership known-answer vector",
+  "leaf": "11",
+  "pathElements": ["22", "33", "44", "55"],
+  "pathIndices": [0, 1, 0, 1],
+  "root": "15279200565368274915541710634944179633805310769512106586104924638980105011859"
+}
