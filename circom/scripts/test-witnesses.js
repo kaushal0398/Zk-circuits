@@ -73,6 +73,7 @@ async function main() {
         : [pathElements[i], current];
       current = poseidon(pair);
     }
+    console.log(`MERKLE_VECTOR_ROOT=${fieldToString(current)}`);
     const merkleInputs = {
       leaf: leaf.toString(),
       pathElements: pathElements.map(String),
