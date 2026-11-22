@@ -1,9 +1,16 @@
+const { checkPrimeSync } = require("node:crypto");
+
 function readBigIntLE(buffer) {
   let value = 0n;
   for (let index = buffer.length - 1; index >= 0; index -= 1) {
     value = (value << 8n) | BigInt(buffer[index]);
   }
   return value;
+}
+
+function toBigEndianBuffer(value) {
+  const hex = value.toString(16);
+  return Buffer.from(hex.length % 2 === 0 ? hex : "0" + hex, "hex");
 }
 
 function parseWtns(buffer) {
@@ -71,6 +78,9 @@ function parseWtns(buffer) {
   const primeField = readBigIntLE(header.subarray(4, 4 + fieldBytes));
   if (primeField <= 1n) {
     throw new Error("WTNS header contains an invalid prime field modulus");
+  }
+  if (!checkPrimeSync(toBigEndianBuffer(primeField))) {
+    throw new Error("WTNS header contains a modulus that is not prime");
   }
 
   // snarkjs stores field elements in 64-bit words, rounding the modulus width up.
