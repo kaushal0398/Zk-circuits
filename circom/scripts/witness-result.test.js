@@ -21,6 +21,12 @@ test("rejects invalid witnesses that exit successfully", () => {
   }, false), /invalid witness unexpectedly succeeded/);
 });
 
+test("rejects constraint assertion output with an unexpected exit code", () => {
+  assert.throws(() => assertWitnessResult("invalid", {
+    status: 2, signal: null, stdout: "", stderr: "Error: Assert Failed.", error: undefined,
+  }, false), /expected a constraint assertion failure to exit with status 1, received 2/);
+});
+
 test("rejects invalid witnesses that fail for an unrelated reason", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: 1, signal: null, stdout: "", stderr: "module not found", error: undefined,
