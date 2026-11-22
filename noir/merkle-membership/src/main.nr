@@ -58,3 +58,13 @@ fn matches_shared_poseidon_bn254_hash_2_vector() {
     // Keep this known-answer value aligned with test-vectors/poseidon-bn254.json.
     assert(hash_2([1, 2]) == 7853200120776062878684798364095072458815029376092732009249414926327459813530);
 }
+
+#[test]
+fn matches_shared_merkle_membership_bn254_vector() {
+    let leaf = 11;
+    let path_elements = [22, 33, 44, 55];
+    let path_indices = [false, true, false, true];
+    let expected_root = 15279200565368274915541710634944179633805310769512106586104924638980105011859;
+
+    assert(compute_root(leaf, path_elements, path_indices) == expected_root);
+}
