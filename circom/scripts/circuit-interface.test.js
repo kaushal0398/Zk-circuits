@@ -48,8 +48,7 @@ function parseNoirPublicParameters(source) {
       assert.ok(match, `Could not parse Noir main parameter: ${parameter}`);
       return match[2] ? match[1] : null;
     })
-    .filter(Boolean)
-    .sort();
+    .filter(Boolean);
 }
 
 function parseCircomPublicValues(source) {
@@ -70,8 +69,7 @@ function parseCircomPublicValues(source) {
   }
 
   return [...publicInputs, ...outputs]
-    .map((name) => circomToNoirNames[name] ?? name)
-    .sort();
+    .map((name) => circomToNoirNames[name] ?? name);
 }
 
 for (const circuit of circuits) {
@@ -80,10 +78,25 @@ for (const circuit of circuits) {
     const circomSource = readFileSync(resolve(repositoryRoot, circuit.circom), "utf8");
     const noirPublic = parseNoirPublicParameters(noirSource);
     const circomPublic = parseCircomPublicValues(circomSource);
-    const expected = [...circuit.expectedPublic].sort();
+    const expected = [...circuit.expectedPublic];
 
-    assert.deepEqual(noirPublic, expected, "Noir public parameters must match the circuit contract");
-    assert.deepEqual(circomPublic, expected, "Circom public values must match the circuit contract");
-    assert.deepEqual(noirPublic, circomPublic, "Noir and Circom public interfaces must agree");
+    assert.deepEqual(noirPublic, expected, "Noir public parameters must match the circuit contract in declaration order");
+    assert.deepEqual(circomPublic, expected, "Circom public values must match the circuit contract in declaration order");
+    assert.deepEqual(noirPublic, circomPublic, "Noir and Circom public interfaces must agree in order");
   });
 }
+
+test("preserves declaration order for multi-value public interfaces", () => {
+  const noirPublic = parseNoirPublicParameters(
+    "fn main(second: pub Field, first: pub Field, witness: Field) {}",
+  );
+  const circomPublic = parseCircomPublicValues(`
+    signal input first;
+    signal input second;
+    signal input witness;
+    component main { public [second, first] } = Example();
+  `);
+
+  assert.deepEqual(noirPublic, ["second", "first"]);
+  assert.deepEqual(circomPublic, noirPublic);
+});
