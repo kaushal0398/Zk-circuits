@@ -8,6 +8,10 @@ const { parseWtns } = require("./wtns-format");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
+const poseidonVector = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/poseidon-bn254.json"),
+  "utf8",
+));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass) {
   const generated = resolve(buildRoot, directory, `${circuitName}_js`);
@@ -38,6 +42,16 @@ async function main() {
 
     const poseidon = await buildPoseidon();
     const fieldToString = (value) => poseidon.F.toString(value);
+    const sharedVectorOutput = fieldToString(
+      poseidon(poseidonVector.inputs.map((value) => BigInt(value))),
+    );
+    if (sharedVectorOutput !== poseidonVector.output) {
+      throw new Error(
+        `Poseidon BN254 shared vector mismatch: expected ${poseidonVector.output}, received ${sharedVectorOutput}`,
+      );
+    }
+    console.log("PASS poseidon-bn254-shared-vector");
+
     const incrementField = (value) => (BigInt(fieldToString(value)) + 1n).toString();
     const preimage = 42n;
     const hash = poseidon([preimage]);
