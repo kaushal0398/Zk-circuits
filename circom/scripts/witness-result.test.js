@@ -30,13 +30,13 @@ test("rejects invalid witnesses that fail for an unrelated reason", () => {
 test("rejects a signal-terminated calculator even if it printed an assertion", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: null, signal: "SIGTERM", stdout: "Assert Failed", stderr: "", error: undefined,
-  }, false), /did not exit normally \\(signal SIGTERM\\)/);
+  }, false), /did not exit normally \(signal SIGTERM\)/);
 });
 
 test("rejects a calculator with no exit status", () => {
   assert.throws(() => assertWitnessResult("invalid", {
     status: null, signal: null, stdout: "Assert Failed", stderr: "", error: undefined,
-  }, false), /did not exit normally \\(no exit status\\)/);
+  }, false), /did not exit normally \(no exit status\)/);
 });
 
 test("reports process startup errors", () => {
