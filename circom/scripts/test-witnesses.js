@@ -19,6 +19,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
 
   const result = spawnSync(process.execPath, [calculator, wasm, inputPath, witnessPath], {
     encoding: "utf8",
+    timeout: 60_000,
   });
   assertWitnessResult(name, result, shouldPass);
 
