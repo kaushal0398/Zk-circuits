@@ -20,7 +20,11 @@ function encodeLittleEndian(value, width) {
   return bytes;
 }
 
-function createHeader({ fieldBytes = 1, primeField = 17n, witnessCount = 2 } = {}) {
+function encodeWitnesses(values, width = 8) {
+  return Buffer.concat(values.map((value) => encodeLittleEndian(value, width)));
+}
+
+function createHeader({ fieldBytes = 8, primeField = 17n, witnessCount = 2 } = {}) {
   return Buffer.concat([
     Buffer.from([fieldBytes, 0, 0, 0]),
     encodeLittleEndian(primeField, fieldBytes),
@@ -35,7 +39,7 @@ function createHeader({ fieldBytes = 1, primeField = 17n, witnessCount = 2 } = {
 
 function createWtns({ version = 2, sectionCount = 2, header, witness, sections } = {}) {
   const headerPayload = header ?? createHeader();
-  const witnessPayload = witness ?? Buffer.from([1, 2]);
+  const witnessPayload = witness ?? encodeWitnesses([1n, 2n]);
   const sectionData = sections ?? [section(1, headerPayload), section(2, witnessPayload)];
   const fileHeader = Buffer.alloc(12);
   fileHeader.write("wtns", 0, "ascii");
@@ -47,7 +51,7 @@ function createWtns({ version = 2, sectionCount = 2, header, witness, sections }
 test("parses a structurally valid WTNS v2 file", () => {
   assert.deepEqual(parseWtns(createWtns()), {
     version: 2,
-    fieldBytes: 1,
+    fieldBytes: 8,
     witnessCount: 2,
     primeField: "17",
   });
@@ -56,10 +60,10 @@ test("parses a structurally valid WTNS v2 file", () => {
 test("accepts valid WTNS sections in either order", () => {
   const header = createHeader();
   assert.deepEqual(parseWtns(createWtns({
-    sections: [section(2, Buffer.from([1, 2])), section(1, header)],
+    sections: [section(2, encodeWitnesses([1n, 2n])), section(1, header)],
   })), {
     version: 2,
-    fieldBytes: 1,
+    fieldBytes: 8,
     witnessCount: 2,
     primeField: "17",
   });
@@ -149,21 +153,46 @@ test("rejects a modulus that cannot define a field", () => {
 });
 
 test("accepts the largest canonical witness value below the modulus", () => {
-  assert.doesNotThrow(() => parseWtns(createWtns({ witness: Buffer.from([16, 0]) })));
+  assert.doesNotThrow(() => parseWtns(createWtns({ witness: encodeWitnesses([16n, 0n]) })));
 });
 
 test("rejects a witness equal to the prime field modulus", () => {
-  assert.throws(() => parseWtns(createWtns({ witness: Buffer.from([17, 2]) })), /witness 0 is not a canonical field element/);
+  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([17n, 2n]) })), /witness 0 is not a canonical field element/);
 });
 
 test("rejects a witness greater than the prime field modulus", () => {
-  assert.throws(() => parseWtns(createWtns({ witness: Buffer.from([18, 2]) })), /witness 0 is not a canonical field element/);
+  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([18n, 2n]) })), /witness 0 is not a canonical field element/);
 });
 
 test("reads multi-byte prime fields and witness values as little-endian integers", () => {
   const data = createWtns({
-    header: createHeader({ fieldBytes: 2, primeField: 257n }),
-    witness: Buffer.concat([encodeLittleEndian(256n, 2), encodeLittleEndian(0n, 2)]),
+    header: createHeader({ fieldBytes: 8, primeField: 257n }),
+    witness: encodeWitnesses([256n, 0n]),
   });
   assert.equal(parseWtns(data).primeField, "257");
+});
+
+test("rejects a field width larger than the WTNS word-rounded modulus width", () => {
+  const data = createWtns({
+    header: createHeader({ fieldBytes: 16, primeField: 17n }),
+    witness: encodeWitnesses([1n, 2n], 16),
+  });
+  assert.throws(() => parseWtns(data), /field width must be 8 bytes/);
+});
+
+test("rejects a field width that is not a multiple of eight bytes", () => {
+  const data = createWtns({
+    header: createHeader({ fieldBytes: 7, primeField: 17n }),
+    witness: encodeWitnesses([1n, 2n], 7),
+  });
+  assert.throws(() => parseWtns(data), /field width must be 8 bytes/);
+});
+
+test("accepts the next 64-bit word width for a 65-bit modulus", () => {
+  const primeField = (1n << 64n) + 13n;
+  const data = createWtns({
+    header: createHeader({ fieldBytes: 16, primeField }),
+    witness: encodeWitnesses([primeField - 1n, 0n], 16),
+  });
+  assert.equal(parseWtns(data).fieldBytes, 16);
 });
