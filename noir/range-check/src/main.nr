@@ -51,3 +51,10 @@ fn rejects_value_outside_8_bits() {
     let value: Field = 256;
     assert(value == reconstruct(bits));
 }
+
+#[test(should_fail)]
+fn rejects_bn254_modulus_minus_one() {
+    let bits = [false; 8];
+    let value: Field = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
+    assert(value == reconstruct(bits));
+}
