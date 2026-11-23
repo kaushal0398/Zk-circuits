@@ -62,7 +62,11 @@ async function main() {
     const poseidonHash1Vector = parsePoseidonVector(poseidonHash1VectorData, 1, "Poseidon hash_1 vector");
     const merkleVector = parseMerkleVector(merkleVectorData);
 
-    runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true, { "main.product": "63" });
+    runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true, {
+      "main.a": "7",
+      "main.b": "9",
+      "main.product": "63",
+    });
     runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true, { "main.value": "0" });
     runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true, { "main.value": "255" });
     runWitness("range-check-rejects-256", "range-check", "range_check", { value: "256" }, false);
