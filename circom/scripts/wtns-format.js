@@ -13,9 +13,12 @@ function toBigEndianBuffer(value) {
   return Buffer.from(hex.length % 2 === 0 ? hex : "0" + hex, "hex");
 }
 
-function parseWtns(buffer) {
+function parseWtns(buffer, { expectedPrimeField } = {}) {
   if (!Buffer.isBuffer(buffer)) {
     throw new TypeError("WTNS input must be a Buffer");
+  }
+  if (expectedPrimeField !== undefined && (typeof expectedPrimeField !== "bigint" || expectedPrimeField <= 1n)) {
+    throw new TypeError("expectedPrimeField must be a BigInt greater than 1");
   }
   if (buffer.length < 12) {
     throw new Error("WTNS file is truncated before the header");
@@ -78,6 +81,9 @@ function parseWtns(buffer) {
   const primeField = readBigIntLE(header.subarray(4, 4 + fieldBytes));
   if (primeField <= 1n) {
     throw new Error("WTNS header contains an invalid prime field modulus");
+  }
+  if (expectedPrimeField !== undefined && primeField !== expectedPrimeField) {
+    throw new Error(`WTNS prime field modulus ${primeField} does not match expected circuit modulus ${expectedPrimeField}`);
   }
   if (!checkPrimeSync(toBigEndianBuffer(primeField))) {
     throw new Error("WTNS header contains a modulus that is not prime");

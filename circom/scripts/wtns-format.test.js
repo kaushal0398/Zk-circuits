@@ -217,3 +217,29 @@ test("accepts the BN254 scalar field modulus", () => {
   });
   assert.equal(parseWtns(data).primeField, primeField.toString());
 });
+
+
+test("accepts a WTNS file with the expected circuit field modulus", () => {
+  assert.equal(parseWtns(createWtns(), { expectedPrimeField: 17n }).primeField, "17");
+});
+
+test("rejects a WTNS file whose declared modulus differs from the expected circuit field", () => {
+  assert.throws(
+    () => parseWtns(createWtns(), { expectedPrimeField: 19n }),
+    /does not match expected circuit modulus 19/,
+  );
+});
+
+test("rejects a non-BigInt expected circuit field modulus", () => {
+  assert.throws(
+    () => parseWtns(createWtns(), { expectedPrimeField: "17" }),
+    /expectedPrimeField must be a BigInt greater than 1/,
+  );
+});
+
+test("rejects an invalid expected circuit field modulus", () => {
+  assert.throws(
+    () => parseWtns(createWtns(), { expectedPrimeField: 1n }),
+    /expectedPrimeField must be a BigInt greater than 1/,
+  );
+});
