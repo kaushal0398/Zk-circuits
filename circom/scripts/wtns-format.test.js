@@ -153,7 +153,7 @@ test("rejects a modulus that cannot define a field", () => {
 });
 
 test("accepts the largest canonical witness value below the modulus", () => {
-  assert.doesNotThrow(() => parseWtns(createWtns({ witness: encodeWitnesses([16n, 0n]) })));
+  assert.doesNotThrow(() => parseWtns(createWtns({ witness: encodeWitnesses([1n, 16n]) })));
 });
 
 test("rejects a witness equal to the prime field modulus", () => {
@@ -164,10 +164,17 @@ test("rejects a witness greater than the prime field modulus", () => {
   assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([18n, 2n]) })), /witness 0 is not a canonical field element/);
 });
 
+test("rejects a witness whose constant slot is not one", () => {
+  assert.throws(
+    () => parseWtns(createWtns({ witness: encodeWitnesses([0n, 2n]) })),
+    /WTNS witness 0 must contain the constant one, received 0/,
+  );
+});
+
 test("reads multi-byte prime fields and witness values as little-endian integers", () => {
   const data = createWtns({
     header: createHeader({ fieldBytes: 8, primeField: 257n }),
-    witness: encodeWitnesses([256n, 0n]),
+    witness: encodeWitnesses([1n, 256n]),
   });
   assert.equal(parseWtns(data).primeField, "257");
 });
@@ -192,7 +199,7 @@ test("accepts the next 64-bit word width for a 65-bit modulus", () => {
   const primeField = (1n << 64n) + 13n;
   const data = createWtns({
     header: createHeader({ fieldBytes: 16, primeField }),
-    witness: encodeWitnesses([primeField - 1n, 0n], 16),
+    witness: encodeWitnesses([1n, primeField - 1n], 16),
   });
   assert.equal(parseWtns(data).fieldBytes, 16);
 });
@@ -213,7 +220,7 @@ test("accepts the BN254 scalar field modulus", () => {
   const primeField = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
   const data = createWtns({
     header: createHeader({ fieldBytes: 32, primeField }),
-    witness: encodeWitnesses([primeField - 1n, 0n], 32),
+    witness: encodeWitnesses([1n, primeField - 1n], 32),
   });
   assert.equal(parseWtns(data).primeField, primeField.toString());
 });
@@ -246,13 +253,13 @@ test("rejects an invalid expected circuit field modulus", () => {
 
 
 test("returns decoded witness values when requested", () => {
-  const data = createWtns({ witness: encodeWitnesses([16n, 0n]) });
+  const data = createWtns({ witness: encodeWitnesses([1n, 0n]) });
   assert.deepEqual(parseWtns(data, { includeWitnessValues: true }), {
     version: 2,
     fieldBytes: 8,
     witnessCount: 2,
     primeField: "17",
-    witnessValues: ["16", "0"],
+    witnessValues: ["1", "0"],
   });
 });
 

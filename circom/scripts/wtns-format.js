@@ -116,6 +116,9 @@ function parseWtns(buffer, { expectedPrimeField, includeWitnessValues = false } 
     if (value >= primeField) {
       throw new Error(`WTNS witness ${index} is not a canonical field element`);
     }
+    if (index === 0 && value !== 1n) {
+      throw new Error(`WTNS witness 0 must contain the constant one, received ${value}`);
+    }
     if (includeWitnessValues) witnessValues.push(value.toString());
   }
 
