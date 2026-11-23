@@ -4,6 +4,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
+const { assertR1csWitnessResult } = require("./r1cs-witness");
 const { assertWitnessSignals } = require("./witness-symbols");
 const { BN254_SCALAR_FIELD, parseMerkleVector } = require("./merkle-vector");
 const { parsePoseidonVector } = require("./poseidon-vector");
@@ -52,6 +53,16 @@ function runWitness(name, directory, circuitName, inputs, shouldPass, expectedSi
         expectedSignals,
       );
     }
+
+    const r1csPath = resolve(buildRoot, directory, `${circuitName}.r1cs`);
+    const check = spawnSync("snarkjs", [
+      "wtns", "check", r1csPath, witnessPath,
+    ], {
+      encoding: "utf8",
+      timeout: 60_000,
+    });
+    assertR1csWitnessResult(name, check);
+    console.log(`PASS ${name}-r1cs-constraints`);
   }
   console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
 }
