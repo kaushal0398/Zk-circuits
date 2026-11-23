@@ -19,7 +19,7 @@ for (const [directory, file, circuitName] of circuits) {
   rmSync(output, { recursive: true, force: true });
   mkdirSync(output, { recursive: true });
   execFileSync("npx", [
-    "circom2", source, "--r1cs", "--wasm", "--sym",
+    "circom2", source, "--prime", "bn128", "--r1cs", "--wasm", "--sym",
     "-l", resolve(root, "node_modules"), "-o", output,
   ], { stdio: "inherit" });
 

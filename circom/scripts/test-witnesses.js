@@ -4,7 +4,7 @@ const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
-const { parseMerkleVector } = require("./merkle-vector");
+const { BN254_SCALAR_FIELD, parseMerkleVector } = require("./merkle-vector");
 const { parsePoseidonVector } = require("./poseidon-vector");
 const { parseWtns } = require("./wtns-format");
 
@@ -38,7 +38,7 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
   assertWitnessResult(name, result, shouldPass);
 
   if (shouldPass) {
-    parseWtns(readFileSync(witnessPath));
+    parseWtns(readFileSync(witnessPath), { expectedPrimeField: BN254_SCALAR_FIELD });
   }
   console.log(`PASS ${name}${shouldPass ? "" : " (rejected as expected)"}`);
 }
