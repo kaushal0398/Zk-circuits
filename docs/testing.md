@@ -26,16 +26,16 @@ npm test
 
 The test command compiles every Circom circuit into a `zk-circuits-build` directory under Node.js's platform-specific temporary directory (`os.tmpdir()`), then calculates witnesses with the generated WebAssembly calculators. The same resolved directory is used by both scripts, so the workflow does not depend on a POSIX-only `/tmp` path.
 
-Circom compilation explicitly selects `--prime bn128`, which is the BN254 scalar field used by these circuits. Every successful witness is parsed as a WTNS v2 file with that exact expected modulus; a file declaring a different prime field is rejected before its witness values are trusted. The parser also validates the file header, section boundaries, field width, witness count, and exact witness payload length. The field width must match the 64-bit word-rounded modulus size used by snarkjs: `ceil(bitLength(modulus) / 64) * 8` bytes. It rejects witness values greater than or equal to the expected modulus, ensuring each encoded value is a canonical field element, and checks that the declared modulus is prime using Node.js's built-in primality test. See the [snarkjs WTNS writer](https://github.com/iden3/snarkjs/blob/master/src/wtns_utils.js) for the width encoding.
+Circom compilation explicitly selects `--prime bn128`, which is the BN254 scalar field used by these circuits. Every successful witness is parsed as a WTNS v2 file with that exact expected modulus; a file declaring a different prime field is rejected before its witness values are trusted. The parser also validates the file header, section boundaries, field width, witness count, and exact witness payload length. Successful witnesses are decoded and their public signal values are checked against the compiler-generated `.sym` mapping, so tests verify actual public values at their compiled witness positions rather than only accepting a structurally valid WTNS file. The field width must match the 64-bit word-rounded modulus size used by snarkjs: `ceil(bitLength(modulus) / 64) * 8` bytes. It rejects witness values greater than or equal to the expected modulus, ensuring each encoded value is a canonical field element, and checks that the declared modulus is prime using Node.js's built-in primality test. See the [snarkjs WTNS writer](https://github.com/iden3/snarkjs/blob/master/src/wtns_utils.js) for the width encoding.
 
 The Circom unit suite also validates the checked-in depth-4 Merkle vector before it is used for witness generation. It requires exactly four siblings and direction bits, accepts only numeric direction bits `0` and `1`, and requires leaf, sibling, and root values to be canonical unsigned decimal strings inside the BN254 scalar field. This prevents malformed vector data from being silently interpreted by the reference-root calculation.
 
 Witness tests cover:
-- A valid multiplication witness.
-- The upper valid 8-bit boundary (255) and rejection of 256.
+- A valid multiplication witness whose compiled public `product` value is checked against 63.
+- The lower and upper valid 8-bit boundaries (0 and 255), with their compiled public values checked, and rejection of 256.
 - Rejection of the BN254 scalar-field maximum (`p - 1`) as an unsigned 8-bit value.
-- A Poseidon hash preimage and rejection of a mismatched public digest.
-- A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
+- A Poseidon hash preimage whose compiled public digest is checked against the expected value, and rejection of a mismatched digest.
+- A depth-4 Poseidon Merkle path whose compiled public root is checked against the shared vector, and rejection of a mismatched root.
 - Rejection of non-boolean and negative Merkle direction indices.
 
 Poseidon `hash_1([1])`, `hash_2([1, 2])`, and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. The one-input hash vector is based on the `circomlibjs` Poseidon test vector. This covers the selected hash inputs and Merkle path only; it does not establish equivalence for all inputs or generate a proof.

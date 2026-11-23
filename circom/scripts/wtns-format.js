@@ -13,9 +13,12 @@ function toBigEndianBuffer(value) {
   return Buffer.from(hex.length % 2 === 0 ? hex : "0" + hex, "hex");
 }
 
-function parseWtns(buffer, { expectedPrimeField } = {}) {
+function parseWtns(buffer, { expectedPrimeField, includeWitnessValues = false } = {}) {
   if (!Buffer.isBuffer(buffer)) {
     throw new TypeError("WTNS input must be a Buffer");
+  }
+  if (typeof includeWitnessValues !== "boolean") {
+    throw new TypeError("includeWitnessValues must be a boolean");
   }
   if (expectedPrimeField !== undefined && (typeof expectedPrimeField !== "bigint" || expectedPrimeField <= 1n)) {
     throw new TypeError("expectedPrimeField must be a BigInt greater than 1");
@@ -106,15 +109,23 @@ function parseWtns(buffer, { expectedPrimeField } = {}) {
     throw new Error("WTNS witness section length does not match its header");
   }
 
+  const witnessValues = includeWitnessValues ? [] : undefined;
   for (let index = 0; index < witnessCount; index += 1) {
     const start = index * fieldBytes;
     const value = readBigIntLE(witnessSection.subarray(start, start + fieldBytes));
     if (value >= primeField) {
       throw new Error(`WTNS witness ${index} is not a canonical field element`);
     }
+    if (includeWitnessValues) witnessValues.push(value.toString());
   }
 
-  return { version, fieldBytes, witnessCount, primeField: primeField.toString() };
+  return {
+    version,
+    fieldBytes,
+    witnessCount,
+    primeField: primeField.toString(),
+    ...(includeWitnessValues ? { witnessValues } : {}),
+  };
 }
 
 module.exports = { parseWtns };
