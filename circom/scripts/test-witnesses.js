@@ -53,6 +53,9 @@ async function main() {
     runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true);
     runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true);
     runWitness("range-check-rejects-256", "range-check", "range_check", { value: "256" }, false);
+    runWitness("range-check-rejects-bn254-modulus-minus-one", "range-check", "range_check", {
+      value: (BN254_SCALAR_FIELD - 1n).toString(),
+    }, false);
 
     const poseidon = await buildPoseidon();
     const fieldToString = (value) => poseidon.F.toString(value);

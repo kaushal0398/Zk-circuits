@@ -33,6 +33,7 @@ The Circom unit suite also validates the checked-in depth-4 Merkle vector before
 Witness tests cover:
 - A valid multiplication witness.
 - The upper valid 8-bit boundary (255) and rejection of 256.
+- Rejection of the BN254 scalar-field maximum (`p - 1`) as an unsigned 8-bit value.
 - A Poseidon hash preimage and rejection of a mismatched public digest.
 - A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
 - Rejection of non-boolean and negative Merkle direction indices.
