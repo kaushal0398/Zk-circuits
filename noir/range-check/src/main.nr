@@ -34,6 +34,11 @@ fn main(value: pub Field, bits: [bool; 8]) {
 }
 
 #[test]
+fn accepts_zero() {
+    main(0, [false; 8]);
+}
+
+#[test]
 fn accepts_173() {
     let bits = [true, false, true, true, false, true, false, true];
     main(173, bits);
