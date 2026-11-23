@@ -40,7 +40,7 @@ fn accepts_leaf_with_correct_path() {
     let h2 = hash_2([h1, path_elements[2]]);
     let expected_root = hash_2([path_elements[3], h2]);
 
-    assert(compute_root(leaf, path_elements, path_indices) == expected_root);
+    main(leaf, path_elements, path_indices, expected_root);
 }
 
 #[test(should_fail)]
@@ -50,7 +50,7 @@ fn rejects_wrong_root() {
     let path_indices = [false, true, false, true];
     let wrong_root = 123456;
 
-    assert(compute_root(leaf, path_elements, path_indices) == wrong_root);
+    main(leaf, path_elements, path_indices, wrong_root);
 }
 
 #[test]
@@ -66,5 +66,5 @@ fn matches_shared_merkle_membership_bn254_vector() {
     let path_indices = [false, true, false, true];
     let expected_root = 15279200565368274915541710634944179633805310769512106586104924638980105011859;
 
-    assert(compute_root(leaf, path_elements, path_indices) == expected_root);
+    main(leaf, path_elements, path_indices, expected_root);
 }

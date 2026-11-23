@@ -36,25 +36,23 @@ fn main(value: pub Field, bits: [bool; 8]) {
 #[test]
 fn accepts_173() {
     let bits = [true, false, true, true, false, true, false, true];
-    assert(reconstruct(bits) == 173);
+    main(173, bits);
 }
 
 #[test]
 fn accepts_maximum_8_bit_value() {
-    let bits = [true; 8];
-    assert(reconstruct(bits) == 255);
+    main(255, [true; 8]);
 }
 
 #[test(should_fail)]
 fn rejects_value_outside_8_bits() {
     let bits = [false; 8];
-    let value: Field = 256;
-    assert(value == reconstruct(bits));
+    main(256, bits);
 }
 
 #[test(should_fail)]
 fn rejects_bn254_modulus_minus_one() {
     let bits = [false; 8];
     let value: Field = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
-    assert(value == reconstruct(bits));
+    main(value, bits);
 }
