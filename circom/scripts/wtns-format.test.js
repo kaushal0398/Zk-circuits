@@ -157,11 +157,11 @@ test("accepts the largest canonical witness value below the modulus", () => {
 });
 
 test("rejects a witness equal to the prime field modulus", () => {
-  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([17n, 2n]) })), /witness 0 is not a canonical field element/);
+  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([1n, 17n]) })), /witness 1 is not a canonical field element/);
 });
 
 test("rejects a witness greater than the prime field modulus", () => {
-  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([18n, 2n]) })), /witness 0 is not a canonical field element/);
+  assert.throws(() => parseWtns(createWtns({ witness: encodeWitnesses([1n, 18n]) })), /witness 1 is not a canonical field element/);
 });
 
 test("rejects a witness whose constant slot is not one", () => {
