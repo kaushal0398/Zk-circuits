@@ -37,7 +37,7 @@ Witness tests cover:
 - A depth-4 Poseidon Merkle path and rejection of a mismatched public root.
 - Rejection of non-boolean and negative Merkle direction indices.
 
-Poseidon `hash_2([1, 2])` and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. This covers the selected hash input and Merkle path only; it does not establish equivalence for all inputs or generate a proof.
+Poseidon `hash_1([1])`, `hash_2([1, 2])`, and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. The one-input hash vector is based on the `circomlibjs` Poseidon test vector. This covers the selected hash inputs and Merkle path only; it does not establish equivalence for all inputs or generate a proof.
 
 ## Continuous integration
 

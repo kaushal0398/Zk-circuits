@@ -1,0 +1,6 @@
+{
+  "name": "BN254 Poseidon hash_1 known-answer vector",
+  "inputs": ["1"],
+  "output": "18586133768512220936620570745912940619677854269274689475585506675881198879027",
+  "source": "https://github.com/iden3/circomlibjs/blob/main/test/poseidon.js"
+}

@@ -13,6 +13,10 @@ const poseidonVector = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/poseidon-bn254.json"),
   "utf8",
 ));
+const poseidonHash1Vector = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/poseidon-hash-1-bn254.json"),
+  "utf8",
+));
 const merkleVectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/merkle-membership-bn254.json"),
   "utf8",
@@ -58,6 +62,20 @@ async function main() {
       );
     }
     console.log("PASS poseidon-bn254-shared-vector");
+
+    const hash1VectorOutput = fieldToString(
+      poseidon(poseidonHash1Vector.inputs.map((value) => BigInt(value))),
+    );
+    if (hash1VectorOutput !== poseidonHash1Vector.output) {
+      throw new Error(
+        `Poseidon BN254 hash_1 shared vector mismatch: expected ${poseidonHash1Vector.output}, received ${hash1VectorOutput}`,
+      );
+    }
+    console.log("PASS poseidon-hash-1-bn254-shared-vector");
+    runWitness("hash-preimage-shared-vector", "hash-preimage", "hash_preimage", {
+      preimage: poseidonHash1Vector.inputs[0],
+      digest: poseidonHash1Vector.output,
+    }, true);
 
     const incrementField = (value) => (BigInt(fieldToString(value)) + 1n).toString();
     const preimage = 42n;
