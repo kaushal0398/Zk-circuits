@@ -5,15 +5,16 @@ const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
 const { parseMerkleVector } = require("./merkle-vector");
+const { parsePoseidonVector } = require("./poseidon-vector");
 const { parseWtns } = require("./wtns-format");
 
 const buildRoot = resolve(tmpdir(), "zk-circuits-build");
 const tempRoot = mkdtempSync(join(tmpdir(), "zk-circuits-witness-"));
-const poseidonVector = JSON.parse(readFileSync(
+const poseidonVectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/poseidon-bn254.json"),
   "utf8",
 ));
-const poseidonHash1Vector = JSON.parse(readFileSync(
+const poseidonHash1VectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/poseidon-hash-1-bn254.json"),
   "utf8",
 ));
@@ -44,6 +45,8 @@ function runWitness(name, directory, circuitName, inputs, shouldPass) {
 
 async function main() {
   try {
+    const poseidonVector = parsePoseidonVector(poseidonVectorData, 2, "Poseidon hash_2 vector");
+    const poseidonHash1Vector = parsePoseidonVector(poseidonHash1VectorData, 1, "Poseidon hash_1 vector");
     const merkleVector = parseMerkleVector(merkleVectorData);
 
     runWitness("multiplier-valid", "multiplier", "multiplier", { a: "7", b: "9" }, true);
@@ -53,28 +56,24 @@ async function main() {
 
     const poseidon = await buildPoseidon();
     const fieldToString = (value) => poseidon.F.toString(value);
-    const sharedVectorOutput = fieldToString(
-      poseidon(poseidonVector.inputs.map((value) => BigInt(value))),
-    );
-    if (sharedVectorOutput !== poseidonVector.output) {
+    const sharedVectorOutput = fieldToString(poseidon(poseidonVector.inputs));
+    if (sharedVectorOutput !== poseidonVector.output.toString()) {
       throw new Error(
         `Poseidon BN254 shared vector mismatch: expected ${poseidonVector.output}, received ${sharedVectorOutput}`,
       );
     }
     console.log("PASS poseidon-bn254-shared-vector");
 
-    const hash1VectorOutput = fieldToString(
-      poseidon(poseidonHash1Vector.inputs.map((value) => BigInt(value))),
-    );
-    if (hash1VectorOutput !== poseidonHash1Vector.output) {
+    const hash1VectorOutput = fieldToString(poseidon(poseidonHash1Vector.inputs));
+    if (hash1VectorOutput !== poseidonHash1Vector.output.toString()) {
       throw new Error(
         `Poseidon BN254 hash_1 shared vector mismatch: expected ${poseidonHash1Vector.output}, received ${hash1VectorOutput}`,
       );
     }
     console.log("PASS poseidon-hash-1-bn254-shared-vector");
     runWitness("hash-preimage-shared-vector", "hash-preimage", "hash_preimage", {
-      preimage: poseidonHash1Vector.inputs[0],
-      digest: poseidonHash1Vector.output,
+      preimage: poseidonHash1Vector.inputs[0].toString(),
+      digest: poseidonHash1Vector.output.toString(),
     }, true);
 
     const incrementField = (value) => (BigInt(fieldToString(value)) + 1n).toString();
