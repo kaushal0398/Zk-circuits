@@ -243,3 +243,22 @@ test("rejects an invalid expected circuit field modulus", () => {
     /expectedPrimeField must be a BigInt greater than 1/,
   );
 });
+
+
+test("returns decoded witness values when requested", () => {
+  const data = createWtns({ witness: encodeWitnesses([16n, 0n]) });
+  assert.deepEqual(parseWtns(data, { includeWitnessValues: true }), {
+    version: 2,
+    fieldBytes: 8,
+    witnessCount: 2,
+    primeField: "17",
+    witnessValues: ["16", "0"],
+  });
+});
+
+test("rejects a non-boolean witness-value option", () => {
+  assert.throws(
+    () => parseWtns(createWtns(), { includeWitnessValues: "yes" }),
+    /includeWitnessValues must be a boolean/,
+  );
+});
