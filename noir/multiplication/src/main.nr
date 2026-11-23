@@ -5,16 +5,10 @@ fn main(a: Field, b: Field, product: pub Field) {
 
 #[test]
 fn accepts_valid_product() {
-    let a = 7;
-    let b = 9;
-    let product = 63;
-    assert(a * b == product);
+    main(7, 9, 63);
 }
 
 #[test(should_fail)]
 fn rejects_invalid_product() {
-    let a = 7;
-    let b = 9;
-    let product = 64;
-    assert(a * b == product);
+    main(7, 9, 64);
 }
