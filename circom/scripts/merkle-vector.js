@@ -40,4 +40,4 @@ function parseMerkleVector(vector) {
   return { leaf, pathElements, pathIndices, root: root.toString() };
 }
 
-module.exports = { parseMerkleVector };
+module.exports = { BN254_SCALAR_FIELD, parseCanonicalField, parseMerkleVector };
