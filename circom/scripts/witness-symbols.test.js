@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { assertWitnessSignals, parseWitnessSymbols } = require("./witness-symbols");
+const { assertPublicWitnessOrder, assertWitnessSignals, parseWitnessSymbols } = require("./witness-symbols");
 
 const symbols = "1,1,0,main.product\n2,2,0,main.a\n3,3,0,main.b\n";
 
@@ -45,4 +45,41 @@ test("rejects duplicate witness positions", () => {
 
 test("rejects malformed symbol rows", () => {
   assert.throws(() => parseWitnessSymbols("1,1,main.product", 2), /must contain four comma-separated fields/);
+});
+
+test("accepts public outputs followed by public inputs in Circom witness order", () => {
+  assert.doesNotThrow(() => assertPublicWitnessOrder(
+    "multiplier",
+    4,
+    symbols,
+    ["main.product", "main.a", "main.b"],
+  ));
+});
+
+test("rejects a public signal moved from its expected witness position", () => {
+  const reordered = "1,1,0,main.a\n2,2,0,main.product\n3,3,0,main.b\n";
+  assert.throws(() => assertPublicWitnessOrder(
+    "multiplier",
+    4,
+    reordered,
+    ["main.product", "main.a", "main.b"],
+  ), /public signal main[.]product expected at witness index 1, received 2/);
+});
+
+test("rejects an expected public signal missing from the compiled symbol map", () => {
+  assert.throws(() => assertPublicWitnessOrder(
+    "multiplier",
+    4,
+    symbols,
+    ["main.product", "main.a", "main.output"],
+  ), /public signal main[.]output is missing/);
+});
+
+test("rejects duplicate names in the expected public interface", () => {
+  assert.throws(() => assertPublicWitnessOrder(
+    "multiplier",
+    4,
+    symbols,
+    ["main.product", "main.product"],
+  ), /duplicate expected public signal main[.]product/);
 });

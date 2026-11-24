@@ -5,7 +5,7 @@ const { join, resolve } = require("node:path");
 const { buildPoseidon } = require("circomlibjs");
 const { assertWitnessResult } = require("./witness-result");
 const { assertR1csWitnessResult } = require("./r1cs-witness");
-const { assertWitnessSignals } = require("./witness-symbols");
+const { assertPublicWitnessOrder, assertWitnessSignals } = require("./witness-symbols");
 const { BN254_SCALAR_FIELD, parseMerkleVector } = require("./merkle-vector");
 const { parsePoseidonVector } = require("./poseidon-vector");
 const { parseWtns } = require("./wtns-format");
@@ -25,7 +25,7 @@ const merkleVectorData = JSON.parse(readFileSync(
   "utf8",
 ));
 
-function runWitness(name, directory, circuitName, inputs, shouldPass, expectedSignals) {
+function runWitness(name, directory, circuitName, inputs, shouldPass, expectedSignals, expectedPublicSignals) {
   const generated = resolve(buildRoot, directory, `${circuitName}_js`);
   const wasm = join(generated, `${circuitName}.wasm`);
   const calculator = join(generated, "generate_witness.js");
@@ -46,12 +46,9 @@ function runWitness(name, directory, circuitName, inputs, shouldPass, expectedSi
     });
     if (expectedSignals !== undefined) {
       const symbolsPath = resolve(buildRoot, directory, `${circuitName}.sym`);
-      assertWitnessSignals(
-        name,
-        witness.witnessValues,
-        readFileSync(symbolsPath, "utf8"),
-        expectedSignals,
-      );
+      const symbolContent = readFileSync(symbolsPath, "utf8");
+      assertPublicWitnessOrder(name, witness.witnessCount, symbolContent, expectedPublicSignals);
+      assertWitnessSignals(name, witness.witnessValues, symbolContent, expectedSignals);
     }
 
     const r1csPath = resolve(buildRoot, directory, `${circuitName}.r1cs`);
@@ -77,9 +74,9 @@ async function main() {
       "main.a": "7",
       "main.b": "9",
       "main.product": "63",
-    });
-    runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true, { "main.value": "0" });
-    runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true, { "main.value": "255" });
+    }, ["main.product", "main.a", "main.b"]);
+    runWitness("range-check-valid-zero", "range-check", "range_check", { value: "0" }, true, { "main.value": "0" }, ["main.value"]);
+    runWitness("range-check-valid-boundary", "range-check", "range_check", { value: "255" }, true, { "main.value": "255" }, ["main.value"]);
     runWitness("range-check-rejects-256", "range-check", "range_check", { value: "256" }, false);
     runWitness("range-check-rejects-bn254-modulus-minus-one", "range-check", "range_check", {
       value: (BN254_SCALAR_FIELD - 1n).toString(),
@@ -105,7 +102,7 @@ async function main() {
     runWitness("hash-preimage-shared-vector", "hash-preimage", "hash_preimage", {
       preimage: poseidonHash1Vector.inputs[0].toString(),
       digest: poseidonHash1Vector.output.toString(),
-    }, true, { "main.digest": poseidonHash1Vector.output.toString() });
+    }, true, { "main.digest": poseidonHash1Vector.output.toString() }, ["main.digest"]);
 
     const incrementField = (value) => (BigInt(fieldToString(value)) + 1n).toString();
     const preimage = 42n;
@@ -113,7 +110,7 @@ async function main() {
     const digest = fieldToString(hash);
     runWitness("hash-preimage-valid", "hash-preimage", "hash_preimage", {
       preimage: preimage.toString(), digest,
-    }, true, { "main.digest": digest });
+    }, true, { "main.digest": digest }, ["main.digest"]);
     runWitness("hash-preimage-rejects-wrong-digest", "hash-preimage", "hash_preimage", {
       preimage: preimage.toString(), digest: incrementField(hash),
     }, false);
@@ -142,7 +139,7 @@ async function main() {
       pathIndices: pathIndices.map(String),
       root: merkleVector.root,
     };
-    runWitness("merkle-membership-valid", "merkle-membership", "merkle_membership", merkleInputs, true, { "main.root": merkleVector.root });
+    runWitness("merkle-membership-valid", "merkle-membership", "merkle_membership", merkleInputs, true, { "main.root": merkleVector.root }, ["main.root"]);
     runWitness("merkle-membership-rejects-wrong-root", "merkle-membership", "merkle_membership", {
       ...merkleInputs,
       root: incrementField(current),
