@@ -62,6 +62,36 @@ function parseWitnessSymbols(content, witnessCount) {
   return new Map([...witnessIndices].map(([index, name]) => [name, index]));
 }
 
+function assertPublicWitnessOrder(name, witnessCount, symbolContent, expectedPublicSignals) {
+  if (!Array.isArray(expectedPublicSignals)) {
+    throw new TypeError(`${name}: expected public signals must be an array`);
+  }
+
+  const signalIndices = parseWitnessSymbols(symbolContent, witnessCount);
+  const seen = new Set();
+  for (const [index, signalName] of expectedPublicSignals.entries()) {
+    if (typeof signalName !== "string" || signalName.length === 0) {
+      throw new TypeError(`${name}: expected public signal names must be non-empty strings`);
+    }
+    if (seen.has(signalName)) {
+      throw new Error(`${name}: duplicate expected public signal ${signalName}`);
+    }
+    seen.add(signalName);
+
+    if (!signalIndices.has(signalName)) {
+      throw new Error(`${name}: public signal ${signalName} is missing from the Circom symbol file`);
+    }
+
+    const expectedIndex = index + 1;
+    const actualIndex = signalIndices.get(signalName);
+    if (actualIndex !== expectedIndex) {
+      throw new Error(
+        `${name}: public signal ${signalName} expected at witness index ${expectedIndex}, received ${actualIndex}`,
+      );
+    }
+  }
+}
+
 function assertWitnessSignals(name, witnessValues, symbolContent, expectedSignals) {
   if (!Array.isArray(witnessValues) || witnessValues.some((value) => typeof value !== "string")) {
     throw new TypeError(`${name}: witness values must be an array of decimal strings`);
@@ -87,4 +117,4 @@ function assertWitnessSignals(name, witnessValues, symbolContent, expectedSignal
   }
 }
 
-module.exports = { assertWitnessSignals, parseWitnessSymbols };
+module.exports = { assertPublicWitnessOrder, assertWitnessSignals, parseWitnessSymbols };
