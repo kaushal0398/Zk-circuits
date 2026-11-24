@@ -17,7 +17,7 @@ test("rejects a witness that fails an R1CS constraint", () => {
     stdout: "[ERROR] snarkJS: Constraint doesn't match",
     stderr: "",
     error: undefined,
-  }), /snarkjs rejected the generated witness \(exit 1\)/);
+  }), /snarkjs rejected the generated witness \\(exit 1\\)/);
 });
 
 test("rejects a successful process without the explicit witness verdict", () => {
@@ -55,4 +55,13 @@ test("rejects a success phrase followed by extra text", () => {
     stderr: "",
     error: undefined,
   }), /did not confirm witness constraint satisfaction/);
+});
+
+test("accepts the exact witness verdict when snarkjs colors its terminal output", () => {
+  assert.doesNotThrow(() => assertR1csWitnessResult("multiplier", {
+    status: 0,
+    stdout: "\u001b[1;32m[INFO] snarkJS: WITNESS IS CORRECT\u001b[0m",
+    stderr: "",
+    error: undefined,
+  }));
 });
