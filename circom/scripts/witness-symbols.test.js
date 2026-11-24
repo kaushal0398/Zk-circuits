@@ -57,7 +57,7 @@ test("accepts public outputs followed by public inputs in Circom witness order",
 });
 
 test("rejects a public signal moved from its expected witness position", () => {
-  const reordered = "1,1,0,main.a\\n2,2,0,main.product\\n3,3,0,main.b\\n";
+  const reordered = "1,1,0,main.a\n2,2,0,main.product\n3,3,0,main.b\n";
   assert.throws(() => assertPublicWitnessOrder(
     "multiplier",
     4,
