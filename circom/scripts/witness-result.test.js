@@ -59,3 +59,13 @@ test("rejects a calculator that exceeds its execution timeout", () => {
   assert.equal(result.error?.code, "ETIMEDOUT");
   assert.throws(() => assertWitnessResult("timed-out", result, false), /could not execute witness calculator/);
 });
+
+test("rejects unrelated errors that merely mention an assertion failure", () => {
+  assert.throws(() => assertWitnessResult("invalid", {
+    status: 1,
+    signal: null,
+    stdout: "",
+    stderr: "Error: Calculator initialization failed.\nPrevious run note: assert failed in a different process.",
+    error: undefined,
+  }, false), /expected a constraint assertion failure/);
+});
