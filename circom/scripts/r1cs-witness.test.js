@@ -17,7 +17,7 @@ test("rejects a witness that fails an R1CS constraint", () => {
     stdout: "[ERROR] snarkJS: Constraint doesn't match",
     stderr: "",
     error: undefined,
-  }), /snarkjs rejected the generated witness \\(exit 1\\)/);
+  }), /snarkjs rejected the generated witness \(exit 1\)/);
 });
 
 test("rejects a successful process without the explicit witness verdict", () => {
