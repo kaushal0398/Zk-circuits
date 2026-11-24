@@ -3,7 +3,7 @@ function assertR1csWitnessResult(name, result) {
     throw new Error(name + ": could not run snarkjs witness check: " + result.error.message);
   }
 
-  const output = (result.stdout ?? "") + "\n" + (result.stderr ?? "");
+  const output = ((result.stdout ?? "") + "\n" + (result.stderr ?? "")).replace(/\u001b\[[0-9;]*m/g, "");
   if (result.status !== 0) {
     throw new Error(name + ": snarkjs rejected the generated witness (exit " + result.status + ")\n" + output);
   }
