@@ -1,4 +1,18 @@
 const ANSI_ESCAPE = /\u001B\[[0-?]*[ -/]*[@-~]/g;
+const BN254_SNARKJS_CURVE = "bn-128";
+
+function parseCurve(output) {
+  const matchingLines = output.split(/\r?\n/).filter((line) => line.includes("Curve:"));
+  if (matchingLines.length !== 1) {
+    throw new Error('snarkjs r1cs info must report "Curve:" exactly once');
+  }
+
+  const match = matchingLines[0].match(/^\s*(?:\[[A-Z]+\]\s*snarkJS:\s*)?Curve:\s*([a-z0-9-]+)\s*$/i);
+  if (!match) {
+    throw new Error("snarkjs r1cs info reported an invalid curve");
+  }
+  return match[1].toLowerCase();
+}
 
 function parseCount(output, label) {
   const marker = "# of " + label + ":";
@@ -28,6 +42,7 @@ function parseR1csInfo(output) {
 
   const normalized = output.replace(ANSI_ESCAPE, "");
   return {
+    curve: parseCurve(normalized),
     publicInputs: parseCount(normalized, "Public Inputs"),
     publicOutputs: parseCount(normalized, "Outputs"),
   };
@@ -61,6 +76,9 @@ function assertR1csPublicInterface(name, result, expected) {
   }
 
   const actual = parseR1csInfo(output);
+  if (actual.curve !== BN254_SNARKJS_CURVE) {
+    throw new Error(name + ": R1CS curve expected " + BN254_SNARKJS_CURVE + ", received " + actual.curve);
+  }
   for (const field of ["publicInputs", "publicOutputs"]) {
     if (actual[field] !== expected[field]) {
       throw new Error(
