@@ -56,3 +56,12 @@ test("rejects a success phrase followed by extra text", () => {
     error: undefined,
   }), /did not confirm witness constraint satisfaction/);
 });
+
+test("accepts the exact witness verdict when snarkjs colors its terminal output", () => {
+  assert.doesNotThrow(() => assertR1csWitnessResult("multiplier", {
+    status: 0,
+    stdout: "\u001b[1;32m[INFO] snarkJS: WITNESS IS CORRECT\u001b[0m",
+    stderr: "",
+    error: undefined,
+  }));
+});
