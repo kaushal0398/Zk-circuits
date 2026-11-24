@@ -37,3 +37,22 @@ test("reports snarkjs process startup and timeout errors", () => {
     error: Object.assign(new Error("timed out"), { code: "ETIMEDOUT" }),
   }), /could not run snarkjs witness check: timed out/);
 });
+
+
+test("rejects a success phrase embedded in an unrelated message", () => {
+  assert.throws(() => assertR1csWitnessResult("multiplier", {
+    status: 0,
+    stdout: "[INFO] snarkJS: NOT WITNESS IS CORRECT",
+    stderr: "",
+    error: undefined,
+  }), /did not confirm witness constraint satisfaction/);
+});
+
+test("rejects a success phrase followed by extra text", () => {
+  assert.throws(() => assertR1csWitnessResult("multiplier", {
+    status: 0,
+    stdout: "[INFO] snarkJS: WITNESS IS CORRECT but verification was skipped",
+    stderr: "",
+    error: undefined,
+  }), /did not confirm witness constraint satisfaction/);
+});
