@@ -22,7 +22,7 @@ function assertWitnessResult(name, result, shouldPass) {
     throw new Error(`${name}: expected a constraint assertion failure to exit with status 1, received ${result.status}\n${output}`);
   }
 
-  if (!shouldPass && !/assert failed/i.test(output)) {
+  if (!shouldPass && !/^[ \t]*Error:[ \t]*(?:Error:[ \t]*)?Assert Failed\./im.test(output)) {
     throw new Error(`${name}: expected a constraint assertion failure, received:\n${output}`);
   }
 }
