@@ -9,9 +9,11 @@ test("accepts a valid witness that exits successfully", () => {
   }, true));
 });
 
-test("accepts an invalid witness rejected by a constraint assertion", () => {
+test("accepts a Circom assertion failure wrapped by the witness calculator", () => {
   assert.doesNotThrow(() => assertWitnessResult("invalid", {
-    status: 1, signal: null, stdout: "", stderr: "Error: Assert Failed.", error: undefined,
+    status: 1, signal: null, stdout: "",
+    stderr: "Error: Error: Assert Failed.\nError in template RangeCheck_1 line: 8",
+    error: undefined,
   }, false));
 });
 
