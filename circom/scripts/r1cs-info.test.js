@@ -3,35 +3,59 @@ const test = require("node:test");
 const { assertR1csPublicInterface, parseR1csInfo } = require("./r1cs-info");
 
 const info = [
+  "[INFO]  snarkJS: Curve: bn-128",
   "[INFO]  snarkJS: # of Private Inputs: 2",
   "[INFO]  snarkJS: # of Public Inputs: 1",
   "[INFO]  snarkJS: # of Outputs: 0",
 ].join("\n");
 
-test("parses public input and output counts from snarkjs r1cs info", () => {
-  assert.deepEqual(parseR1csInfo(info), { publicInputs: 1, publicOutputs: 0 });
+test("parses the BN254 curve and public interface counts from snarkjs r1cs info", () => {
+  assert.deepEqual(parseR1csInfo(info), { curve: "bn-128", publicInputs: 1, publicOutputs: 0 });
 });
 
 test("parses counts when snarkjs writes them across stdout and stderr", () => {
   const result = {
     status: 0,
-    stdout: "[INFO]  snarkJS: # of Public Inputs: 1",
+    stdout: "[INFO]  snarkJS: Curve: bn-128\n[INFO]  snarkJS: # of Public Inputs: 1",
     stderr: "[INFO]  snarkJS: # of Outputs: 0",
   };
   assert.deepEqual(assertR1csPublicInterface("range-check", result, {
     publicInputs: 1,
     publicOutputs: 0,
-  }), { publicInputs: 1, publicOutputs: 0 });
+  }), { curve: "bn-128", publicInputs: 1, publicOutputs: 0 });
 });
 
 test("normalizes ANSI-colored snarkjs output", () => {
   const colored = info.replace("[INFO]", "\u001b[32m[INFO]\u001b[0m");
-  assert.deepEqual(parseR1csInfo(colored), { publicInputs: 1, publicOutputs: 0 });
+  assert.deepEqual(parseR1csInfo(colored), { curve: "bn-128", publicInputs: 1, publicOutputs: 0 });
+});
+
+test("rejects missing R1CS curve metadata", () => {
+  assert.throws(() => parseR1csInfo(info.replace("[INFO]  snarkJS: Curve: bn-128\n", "")), /must report "Curve:" exactly once/);
+});
+
+test("rejects duplicate R1CS curve metadata", () => {
+  assert.throws(() => parseR1csInfo(info + "\n[INFO]  snarkJS: Curve: bn-128"), /must report "Curve:" exactly once/);
+});
+
+test("rejects a malformed curve identifier", () => {
+  assert.throws(() => parseR1csInfo(info.replace("Curve: bn-128", "Curve: bn-128 extra")), /invalid curve/);
+});
+
+test("rejects an R1CS curve that does not match BN254", () => {
+  assert.throws(() => assertR1csPublicInterface("range-check", {
+    status: 0,
+    stdout: info.replace("bn-128", "bls12-381"),
+    stderr: "",
+  }, {
+    publicInputs: 1,
+    publicOutputs: 0,
+  }), /R1CS curve expected bn-128, received bls12-381/);
 });
 
 test("rejects missing R1CS count fields", () => {
   assert.throws(
-    () => parseR1csInfo("[INFO]  snarkJS: # of Outputs: 1"),
+    () => parseR1csInfo("[INFO]  snarkJS: Curve: bn-128\n[INFO]  snarkJS: # of Outputs: 1"),
     /must report "# of Public Inputs:" exactly once/,
   );
 });
@@ -59,7 +83,7 @@ test("checks the compiled R1CS public interface counts", () => {
   assert.deepEqual(assertR1csPublicInterface("range-check", result, {
     publicInputs: 1,
     publicOutputs: 0,
-  }), { publicInputs: 1, publicOutputs: 0 });
+  }), { curve: "bn-128", publicInputs: 1, publicOutputs: 0 });
 });
 
 test("rejects a mismatch between R1CS metadata and the expected interface", () => {
