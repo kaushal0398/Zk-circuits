@@ -18,4 +18,6 @@ Poseidon implementations must use matching parameters, field, and input ordering
 
 ## Testing
 
-The Noir package includes a positive membership test and a negative wrong-root test. The Circom witness test derives its root at runtime using the pinned circomlibjs Poseidon implementation. It checks a valid path, a mismatched public root, a changed leaf, each sibling changed independently, each valid direction bit flipped independently, and rejection of both positive (`2`) and negative (`-1`) non-boolean direction indices. These adversarial cases retain the original public root, so each mutation must be rejected by the circuit constraints. This is a witness-calculation test, not a proof-generation test or a verified Noir/Circom interoperability vector.
+Both Noir and Circom include a positive depth-4 known-answer vector and reject a mismatched public root. Their adversarial tests also retain the original public root while changing the private leaf, each sibling independently, and each valid direction bit independently. This checks that every private path component contributes to the claimed membership statement in both implementations. Circom additionally rejects non-boolean and negative direction indices; Noir represents directions as booleans at the type level.
+
+These are witness/constraint tests, not proof-generation tests or a verified interoperability proof. The shared vector establishes agreement for the selected input only; it does not establish equivalence for all inputs.
