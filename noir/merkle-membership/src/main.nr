@@ -29,6 +29,15 @@ fn main(
     assert(compute_root(leaf, path_elements, path_indices) == merkle_root);
 }
 
+fn assert_original_merkle_root(
+    leaf: Field,
+    path_elements: [Field; 4],
+    path_indices: [bool; 4],
+) {
+    let expected_root = 15279200565368274915541710634944179633805310769512106586104924638980105011859;
+    main(leaf, path_elements, path_indices, expected_root);
+}
+
 #[test]
 fn accepts_leaf_with_correct_path() {
     let leaf = 11;
@@ -67,4 +76,49 @@ fn matches_shared_merkle_membership_bn254_vector() {
     let expected_root = 15279200565368274915541710634944179633805310769512106586104924638980105011859;
 
     main(leaf, path_elements, path_indices, expected_root);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_leaf() {
+    assert_original_merkle_root(12, [22, 33, 44, 55], [false, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_first_sibling() {
+    assert_original_merkle_root(11, [23, 33, 44, 55], [false, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_second_sibling() {
+    assert_original_merkle_root(11, [22, 34, 44, 55], [false, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_third_sibling() {
+    assert_original_merkle_root(11, [22, 33, 45, 55], [false, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_fourth_sibling() {
+    assert_original_merkle_root(11, [22, 33, 44, 56], [false, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_flipped_first_direction() {
+    assert_original_merkle_root(11, [22, 33, 44, 55], [true, true, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_flipped_second_direction() {
+    assert_original_merkle_root(11, [22, 33, 44, 55], [false, false, false, true]);
+}
+
+#[test(should_fail)]
+fn rejects_flipped_third_direction() {
+    assert_original_merkle_root(11, [22, 33, 44, 55], [false, true, true, true]);
+}
+
+#[test(should_fail)]
+fn rejects_flipped_fourth_direction() {
+    assert_original_merkle_root(11, [22, 33, 44, 55], [false, true, false, false]);
 }
