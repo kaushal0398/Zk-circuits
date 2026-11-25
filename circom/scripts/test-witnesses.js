@@ -166,6 +166,27 @@ async function main() {
       ...merkleInputs,
       pathIndices: ["-1", "1", "0", "1"],
     }, false);
+
+    runWitness("merkle-membership-rejects-tampered-leaf", "merkle-membership", "merkle_membership", {
+      ...merkleInputs,
+      leaf: (leaf + 1n).toString(),
+    }, false);
+
+    for (let index = 0; index < pathElements.length; index += 1) {
+      const tamperedPathElements = pathElements.map((element, elementIndex) =>
+        elementIndex === index ? (element + 1n).toString() : element.toString());
+      runWitness(`merkle-membership-rejects-tampered-sibling-${index}`, "merkle-membership", "merkle_membership", {
+        ...merkleInputs,
+        pathElements: tamperedPathElements,
+      }, false);
+
+      const flippedPathIndices = pathIndices.map((direction, directionIndex) =>
+        directionIndex === index ? 1 - direction : direction);
+      runWitness(`merkle-membership-rejects-flipped-direction-${index}`, "merkle-membership", "merkle_membership", {
+        ...merkleInputs,
+        pathIndices: flippedPathIndices.map(String),
+      }, false);
+    }
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }

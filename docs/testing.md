@@ -36,6 +36,8 @@ Witness tests cover:
 - Rejection of the BN254 scalar-field maximum (`p - 1`) as an unsigned 8-bit value.
 - A Poseidon hash preimage whose compiled public digest is checked against the expected value, and rejection of a mismatched digest.
 - A depth-4 Poseidon Merkle path whose compiled public root is checked against the shared vector, and rejection of a mismatched root.
+- Rejection when the private leaf or any one of the four sibling nodes is changed while the original root is retained.
+- Rejection when any one of the four valid direction bits is flipped while the original root is retained.
 - Rejection of non-boolean and negative Merkle direction indices.
 
 Poseidon `hash_1([1])`, `hash_2([1, 2])`, and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. The one-input hash vector is based on the `circomlibjs` Poseidon test vector. This covers the selected hash inputs and Merkle path only; it does not establish equivalence for all inputs or generate a proof.
