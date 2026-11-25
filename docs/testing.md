@@ -12,7 +12,7 @@ for package in noir/*; do
 done
 ```
 
-The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 Poseidon Merkle membership. Their tests include successful statements and deliberately failing assertions.
+The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 Poseidon Merkle membership. Their tests include successful statements and deliberately failing assertions. The Merkle package rejects a changed leaf, each sibling changed independently, and each valid direction bit flipped independently while retaining the original public root, matching the Circom adversarial cases.
 
 ## Circom
 
