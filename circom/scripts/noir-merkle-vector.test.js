@@ -21,6 +21,12 @@ function editSharedVectorBody(edit) {
   return source.slice(0, open + 1) + edit(source.slice(open + 1, close)) + source.slice(close);
 }
 
+function wrapSharedVectorTestInBlockComment() {
+  const match = source.match(/fn matches_shared_merkle_membership_bn254_vector\(\)[\s\S]*?^\}/m);
+  assert.ok(match);
+  return source.replace(match[0], "/*\n" + match[0] + "\n*/");
+}
+
 test("keeps Noir's depth-4 constants aligned with the checked-in BN254 vector", () => {
   assert.deepEqual(assertNoirMerkleVector(source, vector), {
     leaf: 11n,
@@ -80,4 +86,32 @@ test("rejects non-boolean direction literals in Noir", () => {
     "[false, 2, false, true]",
   ));
   assert.throws(() => parseNoirMerkleVector(changed), /must be true or false/);
+});
+
+test("ignores a commented-out copy of the shared-vector test", () => {
+  assert.throws(
+    () => parseNoirMerkleVector(wrapSharedVectorTestInBlockComment()),
+    /define the shared-vector test exactly once/,
+  );
+});
+
+test("ignores commented-out declarations inside the active shared-vector test", () => {
+  const changed = editSharedVectorBody((body) => body.replace(
+    "let leaf = 11;",
+    "let leaf = 11; /* let leaf = 12; */",
+  ));
+  assert.doesNotThrow(() => assertNoirMerkleVector(changed, vector));
+});
+
+test("ignores a commented-out main call when checking the active invocation", () => {
+  const changed = editSharedVectorBody((body) => body.replace(
+    "main(leaf, path_elements, path_indices, expected_root);",
+    "/* main(12, path_elements, path_indices, expected_root); */\n    main(leaf, path_elements, path_indices, expected_root);",
+  ));
+  assert.doesNotThrow(() => assertNoirMerkleVector(changed, vector));
+});
+
+test("handles nested Noir block comments without treating their contents as code", () => {
+  const changed = "/* outer /* inner fn matches_shared_merkle_membership_bn254_vector() {} */ still comment */\n" + source;
+  assert.deepEqual(parseNoirMerkleVector(changed).leaf, 11n);
 });
