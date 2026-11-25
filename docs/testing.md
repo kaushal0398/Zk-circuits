@@ -30,6 +30,8 @@ Circom compilation explicitly selects `--prime bn128`, which is the BN254 scalar
 
 The Circom unit suite also validates the checked-in depth-4 Merkle vector before it is used for witness generation. It requires exactly four siblings and direction bits, accepts only numeric direction bits `0` and `1`, and requires leaf, sibling, and root values to be canonical unsigned decimal strings inside the BN254 scalar field. This prevents malformed vector data from being silently interpreted by the reference-root calculation.
 
+The unit suite also checks the constants and `main(...)` invocation in Noir's `matches_shared_merkle_membership_bn254_vector` test against the checked-in JSON vector. This prevents the Noir leaf, siblings, direction bits, or root from silently drifting away from the vector used by Circom.
+
 Witness tests cover:
 - A valid multiplication witness whose compiled public `product` value is checked against 63.
 - The lower and upper valid 8-bit boundaries (0 and 255), with their compiled public values checked, and rejection of 256.
