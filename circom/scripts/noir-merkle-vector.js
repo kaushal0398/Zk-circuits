@@ -1,3 +1,74 @@
+function stripNoirComments(source) {
+  let output = "";
+  let state = "code";
+  let blockDepth = 0;
+  let quote = null;
+  let escaped = false;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const current = source[index];
+    const next = source[index + 1];
+
+    if (state === "line-comment") {
+      if (current === "\n" || current === "\r") {
+        output += current;
+        state = "code";
+      } else {
+        output += " ";
+      }
+      continue;
+    }
+
+    if (state === "block-comment") {
+      if (current === "/" && next === "*") {
+        output += "  ";
+        blockDepth += 1;
+        index += 1;
+      } else if (current === "*" && next === "/") {
+        output += "  ";
+        blockDepth -= 1;
+        index += 1;
+        if (blockDepth === 0) state = "code";
+      } else {
+        output += current === "\n" || current === "\r" ? current : " ";
+      }
+      continue;
+    }
+
+    if (state === "string") {
+      output += current;
+      if (escaped) {
+        escaped = false;
+      } else if (current === "\\") {
+        escaped = true;
+      } else if (current === quote) {
+        quote = null;
+        state = "code";
+      }
+      continue;
+    }
+
+    if (current === "/" && next === "/") {
+      output += "  ";
+      state = "line-comment";
+      index += 1;
+    } else if (current === "/" && next === "*") {
+      output += "  ";
+      state = "block-comment";
+      blockDepth = 1;
+      index += 1;
+    } else {
+      if (current === "\"" || current === "'") {
+        quote = current;
+        state = "string";
+      }
+      output += current;
+    }
+  }
+
+  return output;
+}
+
 const { parseCanonicalField, parseMerkleVector } = require("./merkle-vector");
 
 const SHARED_VECTOR_TEST = "matches_shared_merkle_membership_bn254_vector";
@@ -7,11 +78,12 @@ function extractSharedVectorBody(source) {
     throw new TypeError("Noir Merkle source must be a non-empty string");
   }
 
+  const uncommentedSource = stripNoirComments(source);
   const pattern = new RegExp(
     "\\bfn\\s+" + SHARED_VECTOR_TEST + "\\s*\\(\\s*\\)\\s*\\{([\\s\\S]*?)^\\}",
     "gm",
   );
-  const matches = [...source.matchAll(pattern)];
+  const matches = [...uncommentedSource.matchAll(pattern)];
   if (matches.length !== 1) {
     throw new Error("Noir Merkle source must define the shared-vector test exactly once");
   }
