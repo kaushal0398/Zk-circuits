@@ -100,7 +100,7 @@ function extractDeclaration(body, name) {
 }
 
 function parseDecimalArray(expression, label) {
-  const match = expression.match(/^\\[\\s*(.*?)\\s*\\]$/s);
+  const match = expression.match(/^\[\s*(.*?)\s*\]$/s);
   if (!match || match[1].trim().length === 0) {
     throw new Error("Noir shared-vector " + label + " must be a non-empty decimal array");
   }
@@ -109,7 +109,7 @@ function parseDecimalArray(expression, label) {
 }
 
 function parseBooleanArray(expression, label) {
-  const match = expression.match(/^\\[\\s*(.*?)\\s*\\]$/s);
+  const match = expression.match(/^\[\s*(.*?)\s*\]$/s);
   if (!match || match[1].trim().length === 0) {
     throw new Error("Noir shared-vector " + label + " must be a non-empty boolean array");
   }
@@ -129,9 +129,9 @@ function parseNoirMerkleVector(source) {
   const pathIndices = parseBooleanArray(extractDeclaration(body, "path_indices"), "path_indices");
   const root = parseCanonicalField(extractDeclaration(body, "expected_root"), "Noir shared-vector expected_root");
 
-  const mainCalls = [...body.matchAll(/\\bmain\\s*\\(/g)];
+  const mainCalls = [...body.matchAll(/\bmain\s*\(/g)];
   const expectedCalls = [...body.matchAll(
-    /\\bmain\\s*\\(\\s*leaf\\s*,\\s*path_elements\\s*,\\s*path_indices\\s*,\\s*expected_root\\s*\\)\\s*;/g,
+    /\bmain\s*\(\s*leaf\s*,\s*path_elements\s*,\s*path_indices\s*,\s*expected_root\s*\)\s*;/g,
   )];
   if (mainCalls.length !== 1 || expectedCalls.length !== 1) {
     throw new Error("Noir shared-vector test must pass its declared values to main exactly once");
