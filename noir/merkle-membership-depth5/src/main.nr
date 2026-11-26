@@ -34,12 +34,8 @@ fn assert_original_depth5_root(
     path_elements: [Field; 5],
     path_indices: [bool; 5],
 ) {
-    // Keep the expected root fixed to the original shared path while inputs are mutated.
-    let h0 = hash_2([11, 22]);
-    let h1 = hash_2([33, h0]);
-    let h2 = hash_2([h1, 44]);
-    let h3 = hash_2([55, h2]);
-    let expected_root = hash_2([h3, 66]);
+    // Fixed BN254 known-answer root from the shared depth-5 vector.
+    let expected_root = 12136329308075030584248930526969017718885956596408610026085681360932685199210;
 
     main(leaf, path_elements, path_indices, expected_root);
 }
@@ -50,12 +46,8 @@ fn matches_shared_merkle_membership_bn254_depth5_vector() {
     let path_elements = [22, 33, 44, 55, 66];
     let path_indices = [false, true, false, true, false];
 
-    // Independently unroll the five Poseidon levels as a reference for the loop.
-    let h0 = hash_2([leaf, path_elements[0]]);
-    let h1 = hash_2([path_elements[1], h0]);
-    let h2 = hash_2([h1, path_elements[2]]);
-    let h3 = hash_2([path_elements[3], h2]);
-    let expected_root = hash_2([h3, path_elements[4]]);
+    // Fixed BN254 known-answer root shared with Circom.
+    let expected_root = 12136329308075030584248930526969017718885956596408610026085681360932685199210;
 
     main(leaf, path_elements, path_indices, expected_root);
 }
