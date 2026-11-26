@@ -161,4 +161,4 @@ function assertNoirMerkleVector(source, vector) {
   return actual;
 }
 
-module.exports = { assertNoirMerkleVector, parseNoirMerkleVector };
+module.exports = { assertNoirMerkleVector, parseNoirMerkleVector, stripNoirComments };
