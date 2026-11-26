@@ -44,6 +44,22 @@ test("rejects a direction vector with the wrong depth", () => {
   assert.throws(() => parseMerkleVector(validVector({ pathIndices: [0, 1, 0] })), /pathIndices must contain exactly 4 values/);
 });
 
+test("rejects sparse Merkle sibling and direction arrays", () => {
+  const sparsePathElements = ["22", "33", "44", "55"];
+  delete sparsePathElements[2];
+  assert.throws(
+    () => parseMerkleVector(validVector({ pathElements: sparsePathElements })),
+    /pathElements\[2\] must be a canonical unsigned decimal string/,
+  );
+
+  const sparsePathIndices = [0, 1, 0, 1];
+  delete sparsePathIndices[3];
+  assert.throws(
+    () => parseMerkleVector(validVector({ pathIndices: sparsePathIndices })),
+    /pathIndices\[3\] must be 0 or 1/,
+  );
+});
+
 test("rejects direction values outside the boolean domain", () => {
   assert.throws(() => parseMerkleVector(validVector({ pathIndices: [0, 2, 0, 1] })), /pathIndices\[1\] must be 0 or 1/);
   assert.throws(() => parseMerkleVector(validVector({ pathIndices: [0, -1, 0, 1] })), /pathIndices\[1\] must be 0 or 1/);

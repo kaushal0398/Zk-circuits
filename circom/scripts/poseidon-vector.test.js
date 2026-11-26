@@ -54,6 +54,15 @@ test("requires an input array with the exact hash arity", () => {
   assert.throws(() => parsePoseidonVector(validVector({ inputs: ["1", "2"] }), 1), /inputs must contain exactly 1 values/);
 });
 
+test("rejects sparse Poseidon input arrays", () => {
+  const inputs = ["1", "2"];
+  delete inputs[1];
+  assert.throws(
+    () => parsePoseidonVector(validVector({ inputs }), 2),
+    /inputs\[1\] must be a canonical unsigned decimal string/,
+  );
+});
+
 test("rejects numeric and non-canonical input encodings", () => {
   assert.throws(() => parsePoseidonVector(validVector({ inputs: [1] }), 1), /inputs\[0\] must be a canonical unsigned decimal string/);
   assert.throws(() => parsePoseidonVector(validVector({ inputs: ["01"] }), 1), /inputs\[0\] must be a canonical unsigned decimal string/);
