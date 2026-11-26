@@ -1,9 +1,10 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { resolve } = require("node:path");
+const { existsSync, readFileSync, readdirSync } = require("node:fs");
+const { dirname, relative, resolve, sep } = require("node:path");
 const test = require("node:test");
 
 const repositoryRoot = resolve(__dirname, "../..");
+const ignoredDirectories = new Set([".git", "build", "dist", "node_modules", "target"]);
 const circomToNoirNames = {
   root: "merkle_root",
 };
@@ -40,6 +41,36 @@ const circuits = [
     expectedPublic: ["merkle_root"],
   },
 ];
+
+function discoverFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      return ignoredDirectories.has(entry.name) ? [] : discoverFiles(path);
+    }
+    return entry.isFile() ? [path] : [];
+  });
+}
+
+function repositoryPath(path) {
+  return relative(repositoryRoot, path).split(sep).join("/");
+}
+
+function discoverCircomEntrypoints() {
+  return discoverFiles(resolve(repositoryRoot, "circom"))
+    .filter((path) => path.endsWith(".circom"))
+    .map(repositoryPath)
+    .sort();
+}
+
+function discoverNoirEntrypoints() {
+  return discoverFiles(resolve(repositoryRoot, "noir"))
+    .filter((path) => path.endsWith("Nargo.toml"))
+    .map((manifest) => resolve(dirname(manifest), "src/main.nr"))
+    .filter(existsSync)
+    .map(repositoryPath)
+    .sort();
+}
 
 function parseNoirPublicParameters(source) {
   const signature = source.match(/\bfn\s+main\s*\(([\s\S]*?)\)\s*\{/);
@@ -78,6 +109,22 @@ function parseCircomPublicValues(source) {
   return [...outputs, ...publicInputs]
     .map((name) => circomToNoirNames[name] ?? name);
 }
+
+test("registers every Circom and Noir circuit entrypoint in the interface contract", () => {
+  const registeredCircom = circuits.map((circuit) => circuit.circom).sort();
+  const registeredNoir = circuits.map((circuit) => circuit.noir).sort();
+
+  assert.deepEqual(
+    registeredCircom,
+    discoverCircomEntrypoints(),
+    "Every Circom source file must be represented in the public-interface contract",
+  );
+  assert.deepEqual(
+    registeredNoir,
+    discoverNoirEntrypoints(),
+    "Every Noir package with src/main.nr must be represented in the public-interface contract",
+  );
+});
 
 for (const circuit of circuits) {
   test(`${circuit.name} keeps the same public values in Noir and Circom`, () => {
