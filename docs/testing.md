@@ -12,7 +12,7 @@ for package in noir/*; do
 done
 ```
 
-The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. The depth-4 package includes adversarial tests for changed leaves, siblings, and direction bits. The depth-5 package exercises a five-level path against the shared depth-5 input vector and rejects a mismatched public root. Circom additionally rejects a changed depth-5 leaf, each changed sibling, each flipped direction bit, and non-boolean or negative direction indices.
+The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. Both depth-4 and depth-5 packages include adversarial tests for changed leaves, every sibling, and every direction bit. The depth-5 package also exercises its five-level path against the shared depth-5 input vector and rejects a mismatched public root. Circom additionally rejects a changed depth-5 leaf, each changed sibling, each flipped direction bit, and non-boolean or negative direction indices.
 
 ## Circom
 
