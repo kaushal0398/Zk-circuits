@@ -21,6 +21,9 @@ function parseMerkleVectorAtDepth(vector, depth, requireRoot = true) {
   if (!Number.isSafeInteger(depth) || depth < 1) {
     throw new TypeError("Merkle vector depth must be a positive safe integer");
   }
+  if (typeof requireRoot !== "boolean") {
+    throw new TypeError("requireRoot must be a boolean");
+  }
   if (!Array.isArray(vector.pathElements) || vector.pathElements.length !== depth) {
     throw new Error(`Merkle vector pathElements must contain exactly ${depth} values`);
   }
