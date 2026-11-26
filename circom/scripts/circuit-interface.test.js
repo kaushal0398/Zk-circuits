@@ -33,6 +33,12 @@ const circuits = [
     noir: "noir/merkle-membership/src/main.nr",
     expectedPublic: ["merkle_root"],
   },
+  {
+    name: "depth-5 Poseidon Merkle membership",
+    circom: "circom/merkle-membership/merkle_membership_depth5.circom",
+    noir: "noir/merkle-membership-depth5/src/main.nr",
+    expectedPublic: ["merkle_root"],
+  },
 ];
 
 function parseNoirPublicParameters(source) {
