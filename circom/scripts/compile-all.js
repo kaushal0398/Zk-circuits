@@ -9,6 +9,7 @@ const circuits = [
   ["multiplier", "multiplier.circom", "multiplier"],
   ["range-check", "range_check.circom", "range_check"],
   ["merkle-membership", "merkle_membership.circom", "merkle_membership"],
+  ["merkle-membership-depth5", "merkle_membership_depth5.circom", "merkle_membership_depth5"],
   ["hash-preimage", "hash_preimage.circom", "hash_preimage"],
 ];
 
