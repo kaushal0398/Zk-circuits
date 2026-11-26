@@ -29,6 +29,21 @@ fn main(
     assert(compute_root(leaf, path_elements, path_indices) == merkle_root);
 }
 
+fn assert_original_depth5_root(
+    leaf: Field,
+    path_elements: [Field; 5],
+    path_indices: [bool; 5],
+) {
+    // Keep the expected root fixed to the original shared path while inputs are mutated.
+    let h0 = hash_2([11, 22]);
+    let h1 = hash_2([33, h0]);
+    let h2 = hash_2([h1, 44]);
+    let h3 = hash_2([55, h2]);
+    let expected_root = hash_2([h3, 66]);
+
+    main(leaf, path_elements, path_indices, expected_root);
+}
+
 #[test]
 fn matches_shared_merkle_membership_bn254_depth5_vector() {
     let leaf = 11;
@@ -52,4 +67,103 @@ fn rejects_wrong_depth5_root() {
     let path_indices = [false, true, false, true, false];
 
     main(leaf, path_elements, path_indices, 123456);
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_leaf() {
+    assert_original_depth5_root(
+        12,
+        [22, 33, 44, 55, 66],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_first_sibling() {
+    assert_original_depth5_root(
+        11,
+        [23, 33, 44, 55, 66],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_second_sibling() {
+    assert_original_depth5_root(
+        11,
+        [22, 34, 44, 55, 66],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_third_sibling() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 45, 55, 66],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_fourth_sibling() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 56, 66],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_tampered_depth5_fifth_sibling() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 67],
+        [false, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_flipped_depth5_first_direction() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 66],
+        [true, true, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_flipped_depth5_second_direction() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 66],
+        [false, false, false, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_flipped_depth5_third_direction() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 66],
+        [false, true, true, true, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_flipped_depth5_fourth_direction() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 66],
+        [false, true, false, false, false],
+    );
+}
+
+#[test(should_fail)]
+fn rejects_flipped_depth5_fifth_direction() {
+    assert_original_depth5_root(
+        11,
+        [22, 33, 44, 55, 66],
+        [false, true, false, true, true],
+    );
 }
