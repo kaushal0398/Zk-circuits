@@ -225,6 +225,35 @@ async function main() {
       { ...merkleDepth5Inputs, root: incrementField(depth5Root) },
       false,
     );
+
+    runWitness("merkle-membership-depth5-rejects-non-boolean-index", "merkle-membership-depth5", "merkle_membership_depth5", {
+      ...merkleDepth5Inputs,
+      pathIndices: ["2", "1", "0", "1", "0"],
+    }, false);
+    runWitness("merkle-membership-depth5-rejects-negative-index", "merkle-membership-depth5", "merkle_membership_depth5", {
+      ...merkleDepth5Inputs,
+      pathIndices: ["-1", "1", "0", "1", "0"],
+    }, false);
+    runWitness("merkle-membership-depth5-rejects-tampered-leaf", "merkle-membership-depth5", "merkle_membership_depth5", {
+      ...merkleDepth5Inputs,
+      leaf: (merkleDepth5Vector.leaf + 1n).toString(),
+    }, false);
+
+    for (let index = 0; index < merkleDepth5Vector.pathElements.length; index += 1) {
+      const tamperedPathElements = merkleDepth5Vector.pathElements.map((element, elementIndex) =>
+        elementIndex === index ? (element + 1n).toString() : element.toString());
+      runWitness(`merkle-membership-depth5-rejects-tampered-sibling-${index}`, "merkle-membership-depth5", "merkle_membership_depth5", {
+        ...merkleDepth5Inputs,
+        pathElements: tamperedPathElements,
+      }, false);
+
+      const flippedPathIndices = merkleDepth5Vector.pathIndices.map((direction, directionIndex) =>
+        directionIndex === index ? 1 - direction : direction);
+      runWitness(`merkle-membership-depth5-rejects-flipped-direction-${index}`, "merkle-membership-depth5", "merkle_membership_depth5", {
+        ...merkleDepth5Inputs,
+        pathIndices: flippedPathIndices.map(String),
+      }, false);
+    }
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
