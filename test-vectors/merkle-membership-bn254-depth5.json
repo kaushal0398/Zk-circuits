@@ -1,0 +1,6 @@
+{
+  "name": "BN254 depth-5 Poseidon Merkle membership shared-input vector",
+  "leaf": "11",
+  "pathElements": ["22", "33", "44", "55", "66"],
+  "pathIndices": [0, 1, 0, 1, 0]
+}
