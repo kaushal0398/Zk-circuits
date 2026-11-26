@@ -78,6 +78,40 @@ test("parses the checked-in depth-5 BN254 Merkle shared-input vector", () => {
   });
 });
 
+
+test("requires a positive safe integer Merkle depth", () => {
+  for (const depth of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1, "5"]) {
+    assert.throws(
+      () => parseMerkleVectorAtDepth(depth5Vector, depth),
+      /depth must be a positive safe integer/,
+    );
+  }
+});
+
+test("requires a boolean root requirement option", () => {
+  for (const requireRoot of [0, 1, "false", null]) {
+    assert.throws(
+      () => parseMerkleVectorAtDepth(depth5Vector, 5, requireRoot),
+      /requireRoot must be a boolean/,
+    );
+  }
+});
+
+test("allows an omitted root only when explicitly optional and validates a supplied root", () => {
+  const vectorWithoutRoot = { ...depth5Vector };
+  delete vectorWithoutRoot.root;
+
+  assert.deepEqual(parseMerkleVectorAtDepth(vectorWithoutRoot, 5, false), {
+    leaf: 11n,
+    pathElements: [22n, 33n, 44n, 55n, 66n],
+    pathIndices: [0, 1, 0, 1, 0],
+  });
+  assert.throws(
+    () => parseMerkleVectorAtDepth({ ...vectorWithoutRoot, root: "01" }, 5, false),
+    /root must be a canonical unsigned decimal string/,
+  );
+});
+
 test("rejects a depth-5 vector without a fixed known-answer root", () => {
   assert.throws(
     () => parseMerkleVectorAtDepth({ ...depth5Vector, root: undefined }, 5),
