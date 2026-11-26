@@ -49,14 +49,14 @@ test("rejects sparse Merkle sibling and direction arrays", () => {
   delete sparsePathElements[2];
   assert.throws(
     () => parseMerkleVector(validVector({ pathElements: sparsePathElements })),
-    /pathElements\\[2\\] must be a canonical unsigned decimal string/,
+    /pathElements\[2\] must be a canonical unsigned decimal string/,
   );
 
   const sparsePathIndices = [0, 1, 0, 1];
   delete sparsePathIndices[3];
   assert.throws(
     () => parseMerkleVector(validVector({ pathIndices: sparsePathIndices })),
-    /pathIndices\\[3\\] must be 0 or 1/,
+    /pathIndices\[3\] must be 0 or 1/,
   );
 });
 
