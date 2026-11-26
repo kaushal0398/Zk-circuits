@@ -8,7 +8,8 @@ A learning-oriented collection of zero-knowledge circuits implemented in **Noir*
 |---|---|---|
 | Multiplication relation | `noir/multiplication` | `circom/multiplier` |
 | 8-bit range check | `noir/range-check` | `circom/range-check` |
-| Poseidon Merkle membership | `noir/merkle-membership` | `circom/merkle-membership` |
+| Poseidon Merkle membership (depth 4) | `noir/merkle-membership` | `circom/merkle-membership` |
+| Poseidon Merkle membership (depth 5) | `noir/merkle-membership-depth5` | `circom/merkle-membership/merkle_membership_depth5.circom` |
 | Poseidon hash preimage | `noir/hash-preimage` | `circom/hash-preimage` |
 
 ## Toolchains
