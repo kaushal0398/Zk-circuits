@@ -59,7 +59,7 @@ test("rejects sparse Poseidon input arrays", () => {
   delete inputs[1];
   assert.throws(
     () => parsePoseidonVector(validVector({ inputs }), 2),
-    /inputs\\[1\\] must be a canonical unsigned decimal string/,
+    /inputs\[1\] must be a canonical unsigned decimal string/,
   );
 });
 
