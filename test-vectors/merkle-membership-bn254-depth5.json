@@ -1,6 +1,7 @@
 {
-  "name": "BN254 depth-5 Poseidon Merkle membership shared-input vector",
+  "name": "BN254 depth-5 Poseidon Merkle membership known-answer vector",
   "leaf": "11",
   "pathElements": ["22", "33", "44", "55", "66"],
-  "pathIndices": [0, 1, 0, 1, 0]
+  "pathIndices": [0, 1, 0, 1, 0],
+  "root": "12136329308075030584248930526969017718885956596408610026085681360932685199210"
 }

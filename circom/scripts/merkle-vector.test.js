@@ -70,11 +70,19 @@ test("rejects field values outside the BN254 scalar field", () => {
 });
 
 test("parses the checked-in depth-5 BN254 Merkle shared-input vector", () => {
-  assert.deepEqual(parseMerkleVectorAtDepth(depth5Vector, 5, false), {
+  assert.deepEqual(parseMerkleVectorAtDepth(depth5Vector, 5), {
     leaf: 11n,
     pathElements: [22n, 33n, 44n, 55n, 66n],
     pathIndices: [0, 1, 0, 1, 0],
+    root: "12136329308075030584248930526969017718885956596408610026085681360932685199210",
   });
+});
+
+test("rejects a depth-5 vector without a fixed known-answer root", () => {
+  assert.throws(
+    () => parseMerkleVectorAtDepth({ ...depth5Vector, root: undefined }, 5),
+    /root must be a canonical unsigned decimal string/,
+  );
 });
 
 test("rejects a depth-5 vector with only four siblings", () => {

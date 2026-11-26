@@ -192,7 +192,7 @@ async function main() {
       }, false);
     }
 
-    const merkleDepth5Vector = parseMerkleVectorAtDepth(merkleDepth5VectorData, 5, false);
+    const merkleDepth5Vector = parseMerkleVectorAtDepth(merkleDepth5VectorData, 5);
     let depth5Root = merkleDepth5Vector.leaf;
     for (let i = 0; i < merkleDepth5Vector.pathElements.length; i += 1) {
       const pair = merkleDepth5Vector.pathIndices[i] === 0
@@ -201,13 +201,18 @@ async function main() {
       depth5Root = poseidon(pair);
     }
     const depth5RootString = fieldToString(depth5Root);
-    console.log(`PASS merkle-membership-bn254-depth5-vector root=${depth5RootString}`);
+    if (depth5RootString !== merkleDepth5Vector.root) {
+      throw new Error(
+        `Merkle membership BN254 depth-5 shared vector mismatch: expected ${merkleDepth5Vector.root}, received ${depth5RootString}`,
+      );
+    }
+    console.log("PASS merkle-membership-bn254-depth5-shared-vector");
 
     const merkleDepth5Inputs = {
       leaf: merkleDepth5Vector.leaf.toString(),
       pathElements: merkleDepth5Vector.pathElements.map(String),
       pathIndices: merkleDepth5Vector.pathIndices.map(String),
-      root: depth5RootString,
+      root: merkleDepth5Vector.root,
     };
     runWitness(
       "merkle-membership-depth5-valid",
