@@ -14,7 +14,7 @@ function editDepth5Test(edit) {
   const marker = "fn matches_shared_merkle_membership_bn254_depth5_vector()";
   const start = source.indexOf(marker);
   const open = source.indexOf("{", start);
-  const close = source.indexOf("\\n}", open);
+  const close = source.indexOf("\n}", open);
   assert.notEqual(start, -1);
   assert.notEqual(open, -1);
   assert.notEqual(close, -1);
