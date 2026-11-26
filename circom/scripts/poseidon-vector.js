@@ -11,7 +11,7 @@ function parsePoseidonVector(vector, expectedArity, label = "Poseidon vector") {
     throw new Error(`${label} inputs must contain exactly ${expectedArity} values`);
   }
 
-  const inputs = vector.inputs.map((value, index) =>
+  const inputs = Array.from(vector.inputs, (value, index) =>
     parseCanonicalField(value, `${label} inputs[${index}]`));
   const output = parseCanonicalField(vector.output, `${label} output`);
 
