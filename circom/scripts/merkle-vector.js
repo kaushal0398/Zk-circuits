@@ -32,10 +32,10 @@ function parseMerkleVectorAtDepth(vector, depth, requireRoot = true) {
   }
 
   const leaf = parseCanonicalField(vector.leaf, "Merkle vector leaf");
-  const pathElements = vector.pathElements.map((value, index) =>
+  const pathElements = Array.from(vector.pathElements, (value, index) =>
     parseCanonicalField(value, `Merkle vector pathElements[${index}]`));
 
-  const pathIndices = vector.pathIndices.map((value, index) => {
+  const pathIndices = Array.from(vector.pathIndices, (value, index) => {
     if (value !== 0 && value !== 1) {
       throw new Error(`Merkle vector pathIndices[${index}] must be 0 or 1`);
     }
