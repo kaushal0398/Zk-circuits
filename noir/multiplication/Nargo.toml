@@ -1,4 +1,0 @@
-[package]
-name = "multiplication"
-type = "bin"
-authors = ["zk-circuits contributors"]
