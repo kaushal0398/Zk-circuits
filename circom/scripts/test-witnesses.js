@@ -7,7 +7,7 @@ const { assertWitnessResult } = require("./witness-result");
 const { assertR1csWitnessResult } = require("./r1cs-witness");
 const { assertR1csPublicInterface } = require("./r1cs-info");
 const { assertPublicWitnessOrder, assertWitnessSignals } = require("./witness-symbols");
-const { BN254_SCALAR_FIELD, parseMerkleVector } = require("./merkle-vector");
+const { BN254_SCALAR_FIELD, parseMerkleVector, parseMerkleVectorAtDepth } = require("./merkle-vector");
 const { parsePoseidonVector } = require("./poseidon-vector");
 const { parseWtns } = require("./wtns-format");
 
@@ -24,6 +24,10 @@ const poseidonHash1VectorData = JSON.parse(readFileSync(
 ));
 const merkleVectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/merkle-membership-bn254.json"),
+  "utf8",
+));
+const merkleDepth5VectorData = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/merkle-membership-bn254-depth5.json"),
   "utf8",
 ));
 
@@ -187,6 +191,40 @@ async function main() {
         pathIndices: flippedPathIndices.map(String),
       }, false);
     }
+
+    const merkleDepth5Vector = parseMerkleVectorAtDepth(merkleDepth5VectorData, 5, false);
+    let depth5Root = merkleDepth5Vector.leaf;
+    for (let i = 0; i < merkleDepth5Vector.pathElements.length; i += 1) {
+      const pair = merkleDepth5Vector.pathIndices[i] === 0
+        ? [depth5Root, merkleDepth5Vector.pathElements[i]]
+        : [merkleDepth5Vector.pathElements[i], depth5Root];
+      depth5Root = poseidon(pair);
+    }
+    const depth5RootString = fieldToString(depth5Root);
+    console.log(`PASS merkle-membership-bn254-depth5-vector root=${depth5RootString}`);
+
+    const merkleDepth5Inputs = {
+      leaf: merkleDepth5Vector.leaf.toString(),
+      pathElements: merkleDepth5Vector.pathElements.map(String),
+      pathIndices: merkleDepth5Vector.pathIndices.map(String),
+      root: depth5RootString,
+    };
+    runWitness(
+      "merkle-membership-depth5-valid",
+      "merkle-membership-depth5",
+      "merkle_membership_depth5",
+      merkleDepth5Inputs,
+      true,
+      { "main.root": depth5RootString },
+      { publicOutputs: 0, publicInputs: 1, publicSignals: ["main.root"] },
+    );
+    runWitness(
+      "merkle-membership-depth5-rejects-wrong-root",
+      "merkle-membership-depth5",
+      "merkle_membership_depth5",
+      { ...merkleDepth5Inputs, root: incrementField(depth5Root) },
+      false,
+    );
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
