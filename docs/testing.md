@@ -12,7 +12,7 @@ for package in noir/*; do
 done
 ```
 
-The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. The depth-4 package includes adversarial tests for changed leaves, siblings, and direction bits. The depth-5 package exercises a five-level path against the shared depth-5 input vector and rejects a mismatched public root.
+The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. The depth-4 package includes adversarial tests for changed leaves, siblings, and direction bits. The depth-5 package exercises a five-level path against the shared depth-5 input vector and rejects a mismatched public root. Circom additionally rejects a changed depth-5 leaf, each changed sibling, each flipped direction bit, and non-boolean or negative direction indices.
 
 ## Circom
 
@@ -39,9 +39,9 @@ Witness tests cover:
 - A Poseidon hash preimage whose compiled public digest is checked against the expected value, and rejection of a mismatched digest.
 - A depth-4 Poseidon Merkle path whose compiled public root is checked against the fixed shared known-answer vector, and rejection of a mismatched root.
 - A depth-5 Poseidon Merkle path using five shared siblings and direction bits, with its root derived by circomlibjs and checked against the compiled depth-5 R1CS; rejection of a mismatched root.
-- Rejection when the private leaf or any one of the four sibling nodes is changed while the original root is retained.
-- Rejection when any one of the four valid direction bits is flipped while the original root is retained.
-- Rejection of non-boolean and negative Merkle direction indices.
+- Rejection when the private leaf or any one of the four depth-4 sibling nodes is changed while the original root is retained; depth-5 Circom tests repeat this for the leaf and all five siblings.
+- Rejection when any one of the four depth-4 valid direction bits is flipped while the original root is retained; depth-5 Circom tests repeat this for all five direction bits.
+- Rejection of non-boolean and negative Merkle direction indices at both Circom depths.
 
 Poseidon `hash_1([1])`, `hash_2([1, 2])`, and the depth-4 Merkle membership case use checked-in BN254 known-answer vectors. Circom checks them through the pinned `circomlibjs` implementation, while Noir checks the same expected values in its package tests. The depth-5 case extends path-length coverage using the same checked-in leaf, sibling, and direction inputs in both languages; each implementation derives the root using its own Poseidon implementation. The depth-5 vector does not claim an independently precomputed root. These tests do not establish equivalence for all inputs or generate a proof.
 
