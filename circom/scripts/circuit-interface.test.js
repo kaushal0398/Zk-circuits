@@ -13,30 +13,35 @@ const circuits = [
   {
     name: "multiplication",
     circom: "circom/multiplier/multiplier.circom",
+    catalogueCircom: "circom/multiplier",
     noir: "noir/multiplication/src/main.nr",
     expectedPublic: ["product"],
   },
   {
     name: "8-bit range check",
     circom: "circom/range-check/range_check.circom",
+    catalogueCircom: "circom/range-check",
     noir: "noir/range-check/src/main.nr",
     expectedPublic: ["value"],
   },
   {
     name: "Poseidon hash preimage",
     circom: "circom/hash-preimage/hash_preimage.circom",
+    catalogueCircom: "circom/hash-preimage",
     noir: "noir/hash-preimage/src/main.nr",
     expectedPublic: ["digest"],
   },
   {
     name: "Poseidon Merkle membership",
     circom: "circom/merkle-membership/merkle_membership.circom",
+    catalogueCircom: "circom/merkle-membership",
     noir: "noir/merkle-membership/src/main.nr",
     expectedPublic: ["merkle_root"],
   },
   {
     name: "depth-5 Poseidon Merkle membership",
     circom: "circom/merkle-membership/merkle_membership_depth5.circom",
+    catalogueCircom: "circom/merkle-membership/merkle_membership_depth5.circom",
     noir: "noir/merkle-membership-depth5/src/main.nr",
     expectedPublic: ["merkle_root"],
   },
@@ -147,12 +152,10 @@ test("keeps the README circuit catalogue in sync with the interface contract", (
     });
     return paths;
   });
-  const expected = circuits.map(({ noir, circom }) => {
-    const circomDirectory = dirname(resolve(repositoryRoot, circom));
-    const circomFiles = discoverFiles(circomDirectory).filter((path) => path.endsWith(".circom"));
-    const circomCataloguePath = circomFiles.length === 1 ? repositoryPath(circomDirectory) : circom;
-    return [noir.slice(0, noir.lastIndexOf("/src/main.nr")), circomCataloguePath];
-  });
+  const expected = circuits.map(({ noir, catalogueCircom }) => [
+    noir.slice(0, noir.lastIndexOf("/src/main.nr")),
+    catalogueCircom,
+  ]);
   const sortEntries = (items) => items.map((item) => item.join("\0")).sort();
   assert.deepEqual(sortEntries(entries), sortEntries(expected), "README circuit paths must match the Noir/Circom interface registry exactly");
 });
