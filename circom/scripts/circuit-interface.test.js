@@ -126,6 +126,31 @@ test("registers every Circom and Noir circuit entrypoint in the interface contra
   );
 });
 
+
+test("keeps the README circuit catalogue in sync with the interface contract", () => {
+  const readme = readFileSync(resolve(repositoryRoot, "README.md"), "utf8");
+  const heading = /^## Circuit catalogue\\s*$/m.exec(readme);
+  assert.ok(heading, "README must contain a Circuit catalogue section");
+  const afterHeading = readme.slice(heading.index + heading[0].length);
+  const nextHeading = /^##\\s/m.exec(afterHeading);
+  const section = nextHeading ? afterHeading.slice(0, nextHeading.index) : afterHeading;
+  const rows = section.split(/\\r?\\n/).filter((line) => /^\\s*\\|/.test(line));
+  assert.ok(rows.length >= 2, "Circuit catalogue must contain a Markdown table");
+  const entries = rows.slice(2).map((row) => {
+    const cells = row.trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|").map((cell) => cell.trim());
+    assert.equal(cells.length, 3, `Unexpected circuit catalogue row: ${row}`);
+    assert.ok(cells[0], "Circuit catalogue entries must have a topic");
+    const paths = cells.slice(1).map((cell) => {
+      const match = /^`([^`]+)`$/.exec(cell);
+      assert.ok(match, `Circuit paths must be formatted as inline code: ${cell}`);
+      return match[1];
+    });
+    return paths;
+  });
+  const expected = circuits.map(({ noir, circom }) => [noir, circom]);
+  const sortEntries = (items) => items.map((item) => item.join("\\0")).sort();
+  assert.deepEqual(sortEntries(entries), sortEntries(expected), "README circuit paths must match the Noir/Circom interface registry exactly");
+});
 for (const circuit of circuits) {
   test(`${circuit.name} keeps the same public values in Noir and Circom`, () => {
     const noirSource = readFileSync(resolve(repositoryRoot, circuit.noir), "utf8");
