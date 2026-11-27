@@ -147,7 +147,12 @@ test("keeps the README circuit catalogue in sync with the interface contract", (
     });
     return paths;
   });
-  const expected = circuits.map(({ noir, circom }) => [noir, circom]);
+  const expected = circuits.map(({ noir, circom }) => {
+    const circomDirectory = dirname(resolve(repositoryRoot, circom));
+    const circomFiles = discoverFiles(circomDirectory).filter((path) => path.endsWith(".circom"));
+    const circomCataloguePath = circomFiles.length === 1 ? repositoryPath(circomDirectory) : circom;
+    return [noir.slice(0, noir.lastIndexOf("/src/main.nr")), circomCataloguePath];
+  });
   const sortEntries = (items) => items.map((item) => item.join("\0")).sort();
   assert.deepEqual(sortEntries(entries), sortEntries(expected), "README circuit paths must match the Noir/Circom interface registry exactly");
 });
