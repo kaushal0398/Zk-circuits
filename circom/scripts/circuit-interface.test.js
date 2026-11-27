@@ -13,30 +13,35 @@ const circuits = [
   {
     name: "multiplication",
     circom: "circom/multiplier/multiplier.circom",
+    catalogueCircom: "circom/multiplier",
     noir: "noir/multiplication/src/main.nr",
     expectedPublic: ["product"],
   },
   {
     name: "8-bit range check",
     circom: "circom/range-check/range_check.circom",
+    catalogueCircom: "circom/range-check",
     noir: "noir/range-check/src/main.nr",
     expectedPublic: ["value"],
   },
   {
     name: "Poseidon hash preimage",
     circom: "circom/hash-preimage/hash_preimage.circom",
+    catalogueCircom: "circom/hash-preimage",
     noir: "noir/hash-preimage/src/main.nr",
     expectedPublic: ["digest"],
   },
   {
     name: "Poseidon Merkle membership",
     circom: "circom/merkle-membership/merkle_membership.circom",
+    catalogueCircom: "circom/merkle-membership",
     noir: "noir/merkle-membership/src/main.nr",
     expectedPublic: ["merkle_root"],
   },
   {
     name: "depth-5 Poseidon Merkle membership",
     circom: "circom/merkle-membership/merkle_membership_depth5.circom",
+    catalogueCircom: "circom/merkle-membership/merkle_membership_depth5.circom",
     noir: "noir/merkle-membership-depth5/src/main.nr",
     expectedPublic: ["merkle_root"],
   },
@@ -126,6 +131,34 @@ test("registers every Circom and Noir circuit entrypoint in the interface contra
   );
 });
 
+
+test("keeps the README circuit catalogue in sync with the interface contract", () => {
+  const readme = readFileSync(resolve(repositoryRoot, "README.md"), "utf8");
+  const heading = /^## Circuit catalogue\s*$/m.exec(readme);
+  assert.ok(heading, "README must contain a Circuit catalogue section");
+  const afterHeading = readme.slice(heading.index + heading[0].length);
+  const nextHeading = /^##\s/m.exec(afterHeading);
+  const section = nextHeading ? afterHeading.slice(0, nextHeading.index) : afterHeading;
+  const rows = section.split(/\r?\n/).filter((line) => /^\s*\|/.test(line));
+  assert.ok(rows.length >= 2, "Circuit catalogue must contain a Markdown table");
+  const entries = rows.slice(2).map((row) => {
+    const cells = row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+    assert.equal(cells.length, 3, `Unexpected circuit catalogue row: ${row}`);
+    assert.ok(cells[0], "Circuit catalogue entries must have a topic");
+    const paths = cells.slice(1).map((cell) => {
+      const match = /^`([^`]+)`$/.exec(cell);
+      assert.ok(match, `Circuit paths must be formatted as inline code: ${cell}`);
+      return match[1];
+    });
+    return paths;
+  });
+  const expected = circuits.map(({ noir, catalogueCircom }) => [
+    noir.slice(0, noir.lastIndexOf("/src/main.nr")),
+    catalogueCircom,
+  ]);
+  const sortEntries = (items) => items.map((item) => item.join("\0")).sort();
+  assert.deepEqual(sortEntries(entries), sortEntries(expected), "README circuit paths must match the Noir/Circom interface registry exactly");
+});
 for (const circuit of circuits) {
   test(`${circuit.name} keeps the same public values in Noir and Circom`, () => {
     const noirSource = readFileSync(resolve(repositoryRoot, circuit.noir), "utf8");
