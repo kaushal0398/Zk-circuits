@@ -29,7 +29,11 @@ function parseWitnessSymbols(content, witnessCount) {
 
     const signalId = Number(signalIdText);
     const witnessIndex = Number(witnessIndexText);
-    if (!Number.isSafeInteger(signalId) || !Number.isSafeInteger(witnessIndex) || witnessIndex < -1) {
+    const componentId = Number(componentIdText);
+    if (!Number.isSafeInteger(signalId)
+      || !Number.isSafeInteger(witnessIndex)
+      || !Number.isSafeInteger(componentId)
+      || witnessIndex < -1) {
       throw new Error(`Circom symbol line ${lineIndex + 1} contains an out-of-range index`);
     }
     if (signalIds.has(signalId)) {

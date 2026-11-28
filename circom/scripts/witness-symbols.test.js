@@ -47,6 +47,13 @@ test("rejects malformed symbol rows", () => {
   assert.throws(() => parseWitnessSymbols("1,1,main.product", 2), /must contain four comma-separated fields/);
 });
 
+test("rejects component identifiers outside the safe integer range", () => {
+  assert.throws(
+    () => parseWitnessSymbols("1,1,9007199254740992,main.product\n", 2),
+    /out-of-range index/,
+  );
+});
+
 test("accepts public outputs followed by public inputs in Circom witness order", () => {
   assert.doesNotThrow(() => assertPublicWitnessOrder(
     "multiplier",
