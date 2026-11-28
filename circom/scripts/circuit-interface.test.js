@@ -83,7 +83,7 @@ function discoverNoirEntrypoints() {
 }
 
 function parseNoirPublicParameters(source) {
-  const signature = source.match(/\\bfn\\s+main\\s*\\(([\\s\\S]*?)\\)\\s*\\{/);
+  const signature = source.match(/\bfn\s+main\s*\(([\s\S]*?)\)\s*\{/);
   assert.ok(signature, "Noir main function must exist");
 
   return signature[1]
@@ -91,7 +91,7 @@ function parseNoirPublicParameters(source) {
     .map((parameter) => parameter.trim())
     .filter(Boolean)
     .map((parameter) => {
-      const match = parameter.match(/^([A-Za-z_]\\w*)\\s*:\\s*(pub\\s+)?/);
+      const match = parameter.match(/^([A-Za-z_]\w*)\s*:\s*(pub\s+)?/);
       assert.ok(match, `Could not parse Noir main parameter: ${parameter}`);
       return match[2] ? match[1] : null;
     })
@@ -99,16 +99,16 @@ function parseNoirPublicParameters(source) {
 }
 
 function parseCircomPublicValues(source) {
-  const main = source.match(/\\bcomponent\\s+main(?:\\s*\\{\\s*public\\s*\\[([^\\]]*)\\]\\s*\\})?\\s*=/);
+  const main = source.match(/\bcomponent\s+main(?:\s*\{\s*public\s*\[([^\]]*)\]\s*\})?\s*=/);
   assert.ok(main, "Circom main component must exist");
 
   const publicInputs = (main[1] ?? "")
     .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
-  const declaredInputs = [...source.matchAll(/\\bsignal\\s+input\\s+([A-Za-z_]\\w*)/g)]
+  const declaredInputs = [...source.matchAll(/\bsignal\s+input\s+([A-Za-z_]\w*)/g)]
     .map((match) => match[1]);
-  const outputs = [...source.matchAll(/\\bsignal\\s+output\\s+([A-Za-z_]\\w*)/g)]
+  const outputs = [...source.matchAll(/\bsignal\s+output\s+([A-Za-z_]\w*)/g)]
     .map((match) => match[1]);
 
   for (const name of publicInputs) {
@@ -138,21 +138,20 @@ test("registers every Circom and Noir circuit entrypoint in the interface contra
 
 test("keeps README circuit catalogue topics and paths in sync with the interface contract", () => {
   const readme = readFileSync(resolve(repositoryRoot, "README.md"), "utf8");
-  const heading = /^## Circuit catalogue\\s*$/m.exec(readme);
+  const heading = /^## Circuit catalogue\s*$/m.exec(readme);
   assert.ok(heading, "README must contain a Circuit catalogue section");
   const afterHeading = readme.slice(heading.index + heading[0].length);
-  const nextHeading = /^##\\s/m.exec(afterHeading);
+  const nextHeading = /^##\s/m.exec(afterHeading);
   const section = nextHeading ? afterHeading.slice(0, nextHeading.index) : afterHeading;
-  const rows = section.split(/\\r?\\n/).filter((line) => /^\\s*\\|/.test(line));
+  const rows = section.split(/\r?\n/).filter((line) => /^\s*\|/.test(line));
   assert.ok(rows.length >= 2, "Circuit catalogue must contain a Markdown table");
   const entries = rows.slice(2).map((row) => {
-    const cells = row.trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|").map((cell) => cell.trim());
+    const cells = row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
     assert.equal(cells.length, 3, `Unexpected circuit catalogue row: ${row}`);
     assert.ok(cells[0], "Circuit catalogue entries must have a topic");
     const paths = cells.slice(1).map((cell) => {
-      const match = /^\`([^\`]+)\`$/.exec(cell);
-      assert.ok(match, `Circuit paths must be formatted as inline code: ${cell}`);
-      return match[1];
+      assert.ok(cell.startsWith("`") && cell.endsWith("`"), `Circuit paths must be formatted as inline code: ${cell}`);
+      return cell.slice(1, -1);
     });
     return [cells[0], ...paths];
   });
@@ -161,7 +160,7 @@ test("keeps README circuit catalogue topics and paths in sync with the interface
     noir.slice(0, noir.lastIndexOf("/src/main.nr")),
     catalogueCircom,
   ]);
-  const sortEntries = (items) => items.map((item) => item.join("\\0")).sort();
+  const sortEntries = (items) => items.map((item) => item.join("\0")).sort();
   assert.deepEqual(
     sortEntries(entries),
     sortEntries(expected),
