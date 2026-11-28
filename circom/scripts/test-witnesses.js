@@ -235,7 +235,7 @@ async function main() {
     const seenDepth5PatternNames = new Set();
     for (const pattern of merkleDepth5PatternVectorData.patterns) {
       if (!expectedDepth5PatternNames.includes(pattern.name) || seenDepth5PatternNames.has(pattern.name)) {
-        throw new Error(\`Unexpected or duplicate depth-5 Merkle path pattern: \${pattern.name}\`);
+        throw new Error("Unexpected or duplicate depth-5 Merkle path pattern: " + pattern.name);
       }
       seenDepth5PatternNames.add(pattern.name);
       const patternVector = parseMerkleVectorAtDepth({
@@ -254,7 +254,7 @@ async function main() {
       const patternRootString = fieldToString(patternRoot);
       if (patternRootString !== patternVector.root) {
         throw new Error(
-          \`Depth-5 Merkle \${pattern.name} known-answer root mismatch: expected \${patternVector.root}, received \${patternRootString}\`,
+          "Depth-5 Merkle " + pattern.name + " known-answer root mismatch: expected " + patternVector.root + ", received " + patternRootString,
         );
       }
       const patternInputs = {
@@ -264,7 +264,7 @@ async function main() {
         root: patternVector.root,
       };
       runWitness(
-        \`merkle-membership-depth5-\${pattern.name}-valid\`,
+        "merkle-membership-depth5-" + pattern.name + "-valid",
         "merkle-membership-depth5",
         "merkle_membership_depth5",
         patternInputs,
