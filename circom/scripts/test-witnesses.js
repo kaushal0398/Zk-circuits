@@ -237,6 +237,7 @@ async function main() {
         patternRoot = poseidon(pair);
       }
       const patternRootString = fieldToString(patternRoot);
+      console.log(`MERKLE_PATTERN_ROOT ${name} ${patternRootString}`);
       runWitness(
         `merkle-membership-depth5-${name}-valid`,
         "merkle-membership-depth5",
