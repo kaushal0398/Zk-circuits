@@ -2,11 +2,15 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { resolve } = require("node:path");
 const test = require("node:test");
-const { assertNoirDepth5Vector, parseNoirDepth5Vector } = require("./noir-merkle-depth5-vector");
+const { assertNoirDepth5PathPatterns, assertNoirDepth5Vector, parseNoirDepth5Vector } = require("./noir-merkle-depth5-vector");
 
 const source = readFileSync(resolve(__dirname, "../../noir/merkle-membership-depth5/src/main.nr"), "utf8");
 const vector = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/merkle-membership-bn254-depth5.json"),
+  "utf8",
+));
+const patternVectors = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/merkle-membership-bn254-depth5-path-patterns.json"),
   "utf8",
 ));
 
@@ -30,6 +34,53 @@ function editOriginalRootHelper(edit) {
   assert.notEqual(open, -1);
   assert.notEqual(close, -1);
   return source.slice(0, open + 1) + edit(source.slice(open + 1, close)) + source.slice(close);
+}
+
+function editNamedFunction(functionName, edit) {
+  const marker = "fn " + functionName + "()";
+  const start = source.indexOf(marker);
+  const open = source.indexOf("{", start);
+  const close = source.indexOf("\n}", open);
+  assert.notEqual(start, -1);
+  assert.notEqual(open, -1);
+  assert.notEqual(close, -1);
+  return source.slice(0, open + 1) + edit(source.slice(open + 1, close)) + source.slice(close);
+}
+
+test("keeps every Noir depth-5 orientation test aligned with fixed shared known-answer roots", () => {
+  assert.deepEqual(assertNoirDepth5PathPatterns(source, vector, patternVectors), [
+    { name: "all-left", leaf: 11n, pathElements: [22n, 33n, 44n, 55n, 66n], pathIndices: [0, 0, 0, 0, 0], root: "20266627731029895434605722127271001318148981508892200764003303242808609458746" },
+    { name: "all-right", leaf: 11n, pathElements: [22n, 33n, 44n, 55n, 66n], pathIndices: [1, 1, 1, 1, 1], root: "12312363999759817358778631803733639225586319278652185681614764318050251390748" },
+    { name: "reverse-alternating", leaf: 11n, pathElements: [22n, 33n, 44n, 55n, 66n], pathIndices: [1, 0, 1, 0, 1], root: "18393086118516950675671630631502825998540206066147000809771999994493374490136" },
+  ]);
+});
+
+for (const pattern of patternVectors.patterns) {
+  const functionName = "accepts_" + pattern.name.replace(/-/g, "_") + "_depth5_path";
+  const directionValues = pattern.pathIndices.map((value) => value === 0 ? "false" : "true");
+  const directionDeclaration = "let path_indices = [" + directionValues.join(", ") + "];";
+
+  test("rejects a Noir " + pattern.name + " root that drifts from its shared known-answer vector", () => {
+    const changed = editNamedFunction(functionName, (body) => body.replace(pattern.root, "0"));
+    assert.throws(() => assertNoirDepth5PathPatterns(changed, vector, patternVectors), /root does not match the shared known-answer vector/);
+  });
+
+  test("rejects Noir " + pattern.name + " directions that drift from the shared vector", () => {
+    const changedDirections = directionValues.map((value) => value === "false" ? "true" : "false");
+    const changed = editNamedFunction(functionName, (body) => body.replace(
+      directionDeclaration,
+      "let path_indices = [" + changedDirections.join(", ") + "];",
+    ));
+    assert.throws(() => assertNoirDepth5PathPatterns(changed, vector, patternVectors), /path indices do not match the shared vector/);
+  });
+
+  test("rejects a Noir " + pattern.name + " test that bypasses its fixed vector inputs", () => {
+    const changed = editNamedFunction(functionName, (body) => body.replace(
+      "main(leaf, path_elements, path_indices, expected_root);",
+      "main(12, path_elements, path_indices, expected_root);",
+    ));
+    assert.throws(() => assertNoirDepth5PathPatterns(changed, vector, patternVectors), /pass its fixed vector to main exactly once/);
+  });
 }
 
 test("keeps Noir depth-5 leaf, siblings, and directions aligned with the shared vector", () => {
