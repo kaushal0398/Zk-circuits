@@ -52,6 +52,51 @@ fn matches_shared_merkle_membership_bn254_depth5_vector() {
     main(leaf, path_elements, path_indices, expected_root);
 }
 
+#[test]
+fn accepts_all_left_depth5_path() {
+    let leaf = 11;
+    let path_elements = [22, 33, 44, 55, 66];
+    let path_indices = [false, false, false, false, false];
+
+    let h0 = hash_2([leaf, path_elements[0]]);
+    let h1 = hash_2([h0, path_elements[1]]);
+    let h2 = hash_2([h1, path_elements[2]]);
+    let h3 = hash_2([h2, path_elements[3]]);
+    let expected_root = hash_2([h3, path_elements[4]]);
+
+    main(leaf, path_elements, path_indices, expected_root);
+}
+
+#[test]
+fn accepts_all_right_depth5_path() {
+    let leaf = 11;
+    let path_elements = [22, 33, 44, 55, 66];
+    let path_indices = [true, true, true, true, true];
+
+    let h0 = hash_2([path_elements[0], leaf]);
+    let h1 = hash_2([path_elements[1], h0]);
+    let h2 = hash_2([path_elements[2], h1]);
+    let h3 = hash_2([path_elements[3], h2]);
+    let expected_root = hash_2([path_elements[4], h3]);
+
+    main(leaf, path_elements, path_indices, expected_root);
+}
+
+#[test]
+fn accepts_reverse_alternating_depth5_path() {
+    let leaf = 11;
+    let path_elements = [22, 33, 44, 55, 66];
+    let path_indices = [true, false, true, false, true];
+
+    let h0 = hash_2([path_elements[0], leaf]);
+    let h1 = hash_2([h0, path_elements[1]]);
+    let h2 = hash_2([path_elements[2], h1]);
+    let h3 = hash_2([h2, path_elements[3]]);
+    let expected_root = hash_2([path_elements[4], h3]);
+
+    main(leaf, path_elements, path_indices, expected_root);
+}
+
 #[test(should_fail)]
 fn rejects_wrong_depth5_root() {
     let leaf = 11;
