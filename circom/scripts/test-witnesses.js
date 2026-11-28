@@ -223,6 +223,35 @@ async function main() {
       { "main.root": depth5RootString },
       { publicOutputs: 0, publicInputs: 1, publicSignals: ["main.root"] },
     );
+    const depth5PathPatterns = [
+      { name: "all-left", pathIndices: [0, 0, 0, 0, 0] },
+      { name: "all-right", pathIndices: [1, 1, 1, 1, 1] },
+      { name: "reverse-alternating", pathIndices: [1, 0, 1, 0, 1] },
+    ];
+    for (const { name, pathIndices } of depth5PathPatterns) {
+      let patternRoot = merkleDepth5Vector.leaf;
+      for (let index = 0; index < merkleDepth5Vector.pathElements.length; index += 1) {
+        const pair = pathIndices[index] === 0
+          ? [patternRoot, merkleDepth5Vector.pathElements[index]]
+          : [merkleDepth5Vector.pathElements[index], patternRoot];
+        patternRoot = poseidon(pair);
+      }
+      const patternRootString = fieldToString(patternRoot);
+      runWitness(
+        `merkle-membership-depth5-${name}-valid`,
+        "merkle-membership-depth5",
+        "merkle_membership_depth5",
+        {
+          ...merkleDepth5Inputs,
+          pathIndices: pathIndices.map(String),
+          root: patternRootString,
+        },
+        true,
+        { "main.root": patternRootString },
+        { publicOutputs: 0, publicInputs: 1, publicSignals: ["main.root"] },
+      );
+    }
+
     runWitness(
       "merkle-membership-depth5-rejects-wrong-root",
       "merkle-membership-depth5",
