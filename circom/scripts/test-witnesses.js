@@ -30,6 +30,10 @@ const merkleDepth5VectorData = JSON.parse(readFileSync(
   resolve(__dirname, "../../test-vectors/merkle-membership-bn254-depth5.json"),
   "utf8",
 ));
+const merkleDepth5PatternVectorData = JSON.parse(readFileSync(
+  resolve(__dirname, "../../test-vectors/merkle-membership-bn254-depth5-path-patterns.json"),
+  "utf8",
+));
 
 function runWitness(name, directory, circuitName, inputs, shouldPass, expectedSignals, expectedInterface) {
   const generated = resolve(buildRoot, directory, `${circuitName}_js`);
@@ -223,33 +227,54 @@ async function main() {
       { "main.root": depth5RootString },
       { publicOutputs: 0, publicInputs: 1, publicSignals: ["main.root"] },
     );
-    const depth5PathPatterns = [
-      { name: "all-left", pathIndices: [0, 0, 0, 0, 0] },
-      { name: "all-right", pathIndices: [1, 1, 1, 1, 1] },
-      { name: "reverse-alternating", pathIndices: [1, 0, 1, 0, 1] },
-    ];
-    for (const { name, pathIndices } of depth5PathPatterns) {
-      let patternRoot = merkleDepth5Vector.leaf;
-      for (let index = 0; index < merkleDepth5Vector.pathElements.length; index += 1) {
-        const pair = pathIndices[index] === 0
-          ? [patternRoot, merkleDepth5Vector.pathElements[index]]
-          : [merkleDepth5Vector.pathElements[index], patternRoot];
+    const expectedDepth5PatternNames = ["all-left", "all-right", "reverse-alternating"];
+    if (!Array.isArray(merkleDepth5PatternVectorData.patterns)
+      || merkleDepth5PatternVectorData.patterns.length !== expectedDepth5PatternNames.length) {
+      throw new Error("Depth-5 Merkle orientation vectors must contain exactly the supported path patterns");
+    }
+    const seenDepth5PatternNames = new Set();
+    for (const pattern of merkleDepth5PatternVectorData.patterns) {
+      if (!expectedDepth5PatternNames.includes(pattern.name) || seenDepth5PatternNames.has(pattern.name)) {
+        throw new Error("Unexpected or duplicate depth-5 Merkle path pattern: " + pattern.name);
+      }
+      seenDepth5PatternNames.add(pattern.name);
+      const patternVector = parseMerkleVectorAtDepth({
+        leaf: merkleDepth5VectorData.leaf,
+        pathElements: merkleDepth5VectorData.pathElements,
+        pathIndices: pattern.pathIndices,
+        root: pattern.root,
+      }, 5);
+      let patternRoot = patternVector.leaf;
+      for (let index = 0; index < patternVector.pathElements.length; index += 1) {
+        const pair = patternVector.pathIndices[index] === 0
+          ? [patternRoot, patternVector.pathElements[index]]
+          : [patternVector.pathElements[index], patternRoot];
         patternRoot = poseidon(pair);
       }
       const patternRootString = fieldToString(patternRoot);
+      if (patternRootString !== patternVector.root) {
+        throw new Error(
+          "Depth-5 Merkle " + pattern.name + " known-answer root mismatch: expected " + patternVector.root + ", received " + patternRootString,
+        );
+      }
+      const patternInputs = {
+        leaf: patternVector.leaf.toString(),
+        pathElements: patternVector.pathElements.map(String),
+        pathIndices: patternVector.pathIndices.map(String),
+        root: patternVector.root,
+      };
       runWitness(
-        `merkle-membership-depth5-${name}-valid`,
+        "merkle-membership-depth5-" + pattern.name + "-valid",
         "merkle-membership-depth5",
         "merkle_membership_depth5",
-        {
-          ...merkleDepth5Inputs,
-          pathIndices: pathIndices.map(String),
-          root: patternRootString,
-        },
+        patternInputs,
         true,
-        { "main.root": patternRootString },
+        { "main.root": patternVector.root },
         { publicOutputs: 0, publicInputs: 1, publicSignals: ["main.root"] },
       );
+    }
+    if (seenDepth5PatternNames.size !== expectedDepth5PatternNames.length) {
+      throw new Error("Depth-5 Merkle orientation vectors are missing a required path pattern");
     }
 
     runWitness(

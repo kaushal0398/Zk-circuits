@@ -57,12 +57,7 @@ fn accepts_all_left_depth5_path() {
     let leaf = 11;
     let path_elements = [22, 33, 44, 55, 66];
     let path_indices = [false, false, false, false, false];
-
-    let h0 = hash_2([leaf, path_elements[0]]);
-    let h1 = hash_2([h0, path_elements[1]]);
-    let h2 = hash_2([h1, path_elements[2]]);
-    let h3 = hash_2([h2, path_elements[3]]);
-    let expected_root = hash_2([h3, path_elements[4]]);
+    let expected_root = 20266627731029895434605722127271001318148981508892200764003303242808609458746;
 
     main(leaf, path_elements, path_indices, expected_root);
 }
@@ -72,12 +67,7 @@ fn accepts_all_right_depth5_path() {
     let leaf = 11;
     let path_elements = [22, 33, 44, 55, 66];
     let path_indices = [true, true, true, true, true];
-
-    let h0 = hash_2([path_elements[0], leaf]);
-    let h1 = hash_2([path_elements[1], h0]);
-    let h2 = hash_2([path_elements[2], h1]);
-    let h3 = hash_2([path_elements[3], h2]);
-    let expected_root = hash_2([path_elements[4], h3]);
+    let expected_root = 12312363999759817358778631803733639225586319278652185681614764318050251390748;
 
     main(leaf, path_elements, path_indices, expected_root);
 }
@@ -87,12 +77,7 @@ fn accepts_reverse_alternating_depth5_path() {
     let leaf = 11;
     let path_elements = [22, 33, 44, 55, 66];
     let path_indices = [true, false, true, false, true];
-
-    let h0 = hash_2([path_elements[0], leaf]);
-    let h1 = hash_2([h0, path_elements[1]]);
-    let h2 = hash_2([path_elements[2], h1]);
-    let h3 = hash_2([h2, path_elements[3]]);
-    let expected_root = hash_2([path_elements[4], h3]);
+    let expected_root = 18393086118516950675671630631502825998540206066147000809771999994493374490136;
 
     main(leaf, path_elements, path_indices, expected_root);
 }

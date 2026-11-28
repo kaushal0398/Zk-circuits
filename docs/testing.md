@@ -12,7 +12,7 @@ for package in noir/*; do
 done
 ```
 
-The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. Both depth-4 and depth-5 packages include adversarial tests for changed leaves, every sibling, and every direction bit. The depth-5 package checks its five-level path against the shared depth-5 known-answer root, accepts all-left, all-right, and reverse-alternating paths, and rejects a mismatched public root. Circom additionally rejects a changed depth-5 leaf, each changed sibling, each flipped direction bit, and non-boolean or negative direction indices.
+The Noir packages cover multiplication, an 8-bit range check, Poseidon hash preimages, and depth-4 and depth-5 Poseidon Merkle membership. Both depth-4 and depth-5 packages include adversarial tests for changed leaves, every sibling, and every direction bit. The depth-5 package checks its five-level path against the shared depth-5 known-answer root, accepts all-left, all-right, and reverse-alternating paths against three additional fixed roots shared with Circom, and rejects a mismatched public root. Circom additionally rejects a changed depth-5 leaf, each changed sibling, each flipped direction bit, and non-boolean or negative direction indices.
 
 ## Circom
 
@@ -30,7 +30,7 @@ Circom compilation explicitly selects `--prime bn128`, which is the BN254 scalar
 
 The Circom unit suite validates the checked-in depth-4 known-answer vector and the depth-5 shared-input vector before witness generation. Both require exactly the configured number of siblings and direction bits, accept only numeric direction bits `0` and `1`, and require leaf and sibling values to be canonical unsigned decimal strings inside the BN254 scalar field. Both depth-4 and depth-5 vectors contain fixed expected roots; the depth-5 root is recomputed by the pinned Poseidon implementation and compared with its checked-in known-answer value during witness testing.
 
-The unit suite checks the depth-4 Noir constants and `main(...)` invocation against the checked-in known-answer vector. It also checks the depth-5 Noir leaf, five siblings, five direction bits, and fixed expected root against the depth-5 shared known-answer vector. The source validator removes line and nested block comments before parsing, so commented-out declarations or calls cannot satisfy these synchronization checks.
+The unit suite checks the depth-4 Noir constants and `main(...)` invocation against the checked-in known-answer vector. It also checks the depth-5 Noir leaf, five siblings, five direction bits, and fixed expected root against the depth-5 shared known-answer vector, plus all three orientation-specific roots and their corresponding Noir test inputs against the shared path-pattern vector file. The source validator removes line and nested block comments before parsing, so commented-out declarations or calls cannot satisfy these synchronization checks.
 
 Witness tests cover:
 - A valid multiplication witness whose compiled public `product` value is checked against 63.
@@ -39,7 +39,7 @@ Witness tests cover:
 - A Poseidon hash preimage whose compiled public digest is checked against the expected value, and rejection of a mismatched digest.
 - A depth-4 Poseidon Merkle path whose compiled public root is checked against the fixed shared known-answer vector, and rejection of a mismatched root.
 - A depth-5 Poseidon Merkle path using five shared siblings, direction bits, and a fixed known-answer root; circomlibjs recomputes the root and the compiled depth-5 R1CS checks the witness, with rejection of a mismatched root.
-- Valid depth-5 all-left, all-right, and reverse-alternating paths; each root is independently recomputed with pinned circomlibjs and checked against the compiled depth-5 R1CS.
+- Valid depth-5 all-left, all-right, and reverse-alternating paths; each root is pinned in `merkle-membership-bn254-depth5-path-patterns.json`, independently recomputed with pinned circomlibjs, and checked against the compiled depth-5 R1CS. Noir uses the same fixed roots, and the Circom unit suite checks that its test literals match the shared vectors.
 - Rejection when the private leaf or any one of the four depth-4 sibling nodes is changed while the original root is retained; depth-5 Circom tests repeat this for the leaf and all five siblings.
 - Rejection when any one of the four depth-4 valid direction bits is flipped while the original root is retained; depth-5 Circom tests repeat this for all five direction bits.
 - Rejection of non-boolean and negative Merkle direction indices at both Circom depths.

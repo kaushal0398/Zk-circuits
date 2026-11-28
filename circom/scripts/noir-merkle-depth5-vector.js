@@ -94,6 +94,67 @@ function parseNoirDepth5Vector(source) {
   return { leaf, pathElements, pathIndices, root: root.toString() };
 }
 
+const DEPTH5_PATH_PATTERN_NAMES = ["all-left", "all-right", "reverse-alternating"];
+
+function parseNoirDepth5PathPattern(source, patternName) {
+  if (!DEPTH5_PATH_PATTERN_NAMES.includes(patternName)) {
+    throw new Error("Unsupported Noir depth-5 path pattern: " + patternName);
+  }
+  const testName = "accepts_" + patternName.replace(/-/g, "_") + "_depth5_path";
+  const body = extractFunctionBody(source, testName);
+  const leaf = parseCanonicalField(extractDeclaration(body, "leaf"), "Noir depth-5 " + patternName + " leaf");
+  const pathElements = parseDecimalArray(extractDeclaration(body, "path_elements"), patternName + " path_elements");
+  const pathIndices = parseBooleanArray(extractDeclaration(body, "path_indices"), patternName + " path_indices");
+  const root = parseCanonicalField(extractDeclaration(body, "expected_root"), "Noir depth-5 " + patternName + " expected root");
+  const mainCalls = [...body.matchAll(/\bmain\s*\(/g)];
+  const expectedCalls = [...body.matchAll(
+    /\bmain\s*\(\s*leaf\s*,\s*path_elements\s*,\s*path_indices\s*,\s*expected_root\s*\)\s*;/g,
+  )];
+  if (mainCalls.length !== 1 || expectedCalls.length !== 1) {
+    throw new Error("Noir depth-5 " + patternName + " test must pass its fixed vector to main exactly once");
+  }
+  return { leaf, pathElements, pathIndices, root: root.toString() };
+}
+
+function assertNoirDepth5PathPatterns(source, vector, patternVectors) {
+  parseMerkleVectorAtDepth(vector, 5);
+  if (patternVectors === null || typeof patternVectors !== "object" || Array.isArray(patternVectors)
+    || !Array.isArray(patternVectors.patterns)) {
+    throw new TypeError("Noir depth-5 path-pattern vectors must contain a patterns array");
+  }
+  const names = patternVectors.patterns.map((pattern) => pattern && pattern.name);
+  if (names.length !== DEPTH5_PATH_PATTERN_NAMES.length
+    || new Set(names).size !== names.length
+    || DEPTH5_PATH_PATTERN_NAMES.some((name) => !names.includes(name))) {
+    throw new Error("Shared depth-5 path-pattern vectors must define each supported pattern exactly once");
+  }
+
+  return patternVectors.patterns.map((pattern) => {
+    const expected = parseMerkleVectorAtDepth({
+      leaf: vector.leaf,
+      pathElements: vector.pathElements,
+      pathIndices: pattern.pathIndices,
+      root: pattern.root,
+    }, 5);
+    const actual = parseNoirDepth5PathPattern(source, pattern.name);
+    if (actual.leaf !== expected.leaf) {
+      throw new Error("Noir depth-5 " + pattern.name + " leaf does not match the shared vector");
+    }
+    if (actual.pathElements.length !== 5
+      || actual.pathElements.some((value, index) => value !== expected.pathElements[index])) {
+      throw new Error("Noir depth-5 " + pattern.name + " path elements do not match the shared vector");
+    }
+    if (actual.pathIndices.length !== 5
+      || actual.pathIndices.some((value, index) => value !== expected.pathIndices[index])) {
+      throw new Error("Noir depth-5 " + pattern.name + " path indices do not match the shared vector");
+    }
+    if (actual.root !== expected.root) {
+      throw new Error("Noir depth-5 " + pattern.name + " root does not match the shared known-answer vector");
+    }
+    return { name: pattern.name, ...actual };
+  });
+}
+
 function assertNoirDepth5Vector(source, vector) {
   const expected = parseMerkleVectorAtDepth(vector, 5);
   const actual = parseNoirDepth5Vector(source);
@@ -114,4 +175,4 @@ function assertNoirDepth5Vector(source, vector) {
   return actual;
 }
 
-module.exports = { assertNoirDepth5Vector, parseNoirDepth5Vector };
+module.exports = { assertNoirDepth5PathPatterns, assertNoirDepth5Vector, parseNoirDepth5Vector };
